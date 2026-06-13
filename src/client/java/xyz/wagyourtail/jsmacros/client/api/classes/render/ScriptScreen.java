@@ -43,9 +43,9 @@ public class ScriptScreen extends BaseScreen {
 
     @Override
     protected void init() {
-        BaseScreen prev = JsMacrosClient.prevScreen;
+        BaseScreen prev = JsMacrosClient.prevScreen();
         super.init();
-        JsMacrosClient.prevScreen = prev;
+        JsMacrosClient.setPrevScreen(prev);
     }
 
     /**

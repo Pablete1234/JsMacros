@@ -147,11 +147,11 @@ public class EditorScreen extends BaseScreen {
         mc.execute(() -> {
             EditorScreen screen;
             try {
-                if (JsMacrosClient.prevScreen instanceof EditorScreen &&
-                        ((EditorScreen) JsMacrosClient.prevScreen).file.getCanonicalPath().equals(file.getCanonicalPath())) {
-                    screen = (EditorScreen) JsMacrosClient.prevScreen;
+                if (JsMacrosClient.prevScreen() instanceof EditorScreen ed &&
+                        ed.file.getCanonicalPath().equals(file.getCanonicalPath())) {
+                    screen = ed;
                 } else {
-                    screen = new EditorScreen(JsMacrosClient.prevScreen, file);
+                    screen = new EditorScreen(JsMacrosClient.prevScreen(), file);
                 }
                 screen.cursor.updateStartIndex(startIndex, screen.history.current);
                 screen.cursor.updateEndIndex(finalEndIndex, screen.history.current);
@@ -167,11 +167,11 @@ public class EditorScreen extends BaseScreen {
         mc.execute(() -> {
             EditorScreen screen;
             try {
-                if (JsMacrosClient.prevScreen instanceof EditorScreen &&
-                        ((EditorScreen) JsMacrosClient.prevScreen).file.getCanonicalPath().equals(file.getCanonicalPath())) {
-                    screen = (EditorScreen) JsMacrosClient.prevScreen;
+                if (JsMacrosClient.prevScreen() instanceof EditorScreen ed &&
+                        ed.file.getCanonicalPath().equals(file.getCanonicalPath())) {
+                    screen = ed;
                 } else {
-                    screen = new EditorScreen(JsMacrosClient.prevScreen, file);
+                    screen = new EditorScreen(JsMacrosClient.prevScreen(), file);
                 }
                 String[] lines = screen.history.current.split("\n", -1);
                 int lineIndex = 0;

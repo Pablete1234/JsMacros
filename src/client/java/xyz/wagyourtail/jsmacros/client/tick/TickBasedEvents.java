@@ -48,7 +48,7 @@ public class TickBasedEvents {
 
     public static void onTick(Minecraft mc) {
         if (JsMacrosClient.keyBinding.consumeClick() && mc.screen == null) {
-            mc.setScreen(JsMacrosClient.prevScreen);
+            mc.setScreen(JsMacrosClient.prevScreen());
         }
 
         FClient.tickSynchronizer.tick();

@@ -17,7 +17,7 @@ public class ModMenuEntry implements ModMenuApi {
     public static class JsMacroScreen implements ConfigScreenFactory<BaseScreen> {
         @Override
         public BaseScreen create(Screen parent) {
-            return JsMacrosClient.prevScreen;
+            return JsMacrosClient.prevScreen();
         }
 
     }

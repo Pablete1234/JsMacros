@@ -51,7 +51,7 @@ public class JsMacrosClient extends JsMacros {
     public static KeyMapping keyBinding = new KeyMapping("jsmacros.menu", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, keyBindingCategory);
     public static final Core<ClientProfile, EventRegistry> clientCore = new Core<>(EventRegistry::new, ClientProfile::new, configFolder.getAbsoluteFile(), new File(configFolder, "Macros"), LOGGER);
 
-    public static BaseScreen prevScreen;
+    private static BaseScreen prevScreen;
 
     public static void onInitializeClient() {
         try {
@@ -59,8 +59,6 @@ public class JsMacrosClient extends JsMacros {
         } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException | IOException e) {
             e.printStackTrace();
         }
-
-        prevScreen = new KeyMacrosScreen(null);
 
         // Init MovementQueue
         MovementQueue.clear();
@@ -124,6 +122,16 @@ public class JsMacrosClient extends JsMacros {
                 yield ret;
             }
         };
+    }
+
+    public static BaseScreen prevScreen() {
+        if (prevScreen != null) return prevScreen;
+        // Lazy init
+        return prevScreen = new KeyMacrosScreen(null);
+    }
+
+    public static void setPrevScreen(BaseScreen screen) {
+        prevScreen = screen;
     }
 
     @Deprecated

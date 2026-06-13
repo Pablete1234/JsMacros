@@ -47,7 +47,7 @@ public abstract class BaseScreen extends Screen implements IOverlayParent {
         clearWidgets();
         super.init();
         overlay = null;
-        JsMacrosClient.prevScreen = this;
+        JsMacrosClient.setPrevScreen(this);
     }
 
     @Override
