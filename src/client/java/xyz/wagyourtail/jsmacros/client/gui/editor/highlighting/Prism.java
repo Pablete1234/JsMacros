@@ -3,7 +3,16 @@ package xyz.wagyourtail.jsmacros.client.gui.editor.highlighting;
 import com.google.common.collect.Sets;
 import io.noties.prism4j.GrammarLocator;
 import io.noties.prism4j.Prism4j;
-import io.noties.prism4j.languages.*;
+import io.noties.prism4j.languages.Prism_clike;
+import io.noties.prism4j.languages.Prism_groovy;
+import io.noties.prism4j.languages.Prism_javascript;
+import io.noties.prism4j.languages.Prism_json;
+import io.noties.prism4j.languages.Prism_kotlin;
+import io.noties.prism4j.languages.Prism_lua;
+import io.noties.prism4j.languages.Prism_python;
+import io.noties.prism4j.languages.Prism_regex;
+import io.noties.prism4j.languages.Prism_ruby;
+import io.noties.prism4j.languages.Prism_typescript;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

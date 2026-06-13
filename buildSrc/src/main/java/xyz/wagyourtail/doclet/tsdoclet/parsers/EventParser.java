@@ -5,11 +5,11 @@ import xyz.wagyourtail.StringHelpers;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
-import java.util.LinkedHashSet;
-import java.util.LinkedHashMap;
 import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class EventParser extends AbstractParser {
     protected final String name;

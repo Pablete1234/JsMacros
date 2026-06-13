@@ -7,7 +7,11 @@ import xyz.wagyourtail.jsmacros.core.extensions.Extension;
 import xyz.wagyourtail.jsmacros.core.extensions.LanguageExtension;
 import xyz.wagyourtail.jsmacros.core.language.BaseLanguage;
 import xyz.wagyourtail.jsmacros.core.language.BaseScriptContext;
-import xyz.wagyourtail.jsmacros.core.library.*;
+import xyz.wagyourtail.jsmacros.core.library.BaseLibrary;
+import xyz.wagyourtail.jsmacros.core.library.Library;
+import xyz.wagyourtail.jsmacros.core.library.PerExecLanguageLibrary;
+import xyz.wagyourtail.jsmacros.core.library.PerExecLibrary;
+import xyz.wagyourtail.jsmacros.core.library.PerLanguageLibrary;
 
 import java.util.ArrayList;
 import java.util.List;

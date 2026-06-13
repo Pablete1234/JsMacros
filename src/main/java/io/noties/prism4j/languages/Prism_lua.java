@@ -3,8 +3,12 @@ package io.noties.prism4j.languages;
 import io.noties.prism4j.Prism4j;
 import org.jetbrains.annotations.NotNull;
 
-import static io.noties.prism4j.Prism4j.*;
-import static java.util.regex.Pattern.*;
+import static io.noties.prism4j.Prism4j.grammar;
+import static io.noties.prism4j.Prism4j.pattern;
+import static io.noties.prism4j.Prism4j.token;
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.regex.Pattern.MULTILINE;
+import static java.util.regex.Pattern.compile;
 
 @SuppressWarnings("unused")
 public class Prism_lua {

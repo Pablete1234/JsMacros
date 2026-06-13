@@ -1,14 +1,11 @@
 package xyz.wagyourtail.jsmacros.graal;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import xyz.wagyourtail.jsmacros.core.config.Option;
 import xyz.wagyourtail.jsmacros.core.config.OptionType;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class GraalConfig {

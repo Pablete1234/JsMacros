@@ -8,7 +8,12 @@ import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
 import xyz.wagyourtail.jsmacros.core.library.BaseLibrary;
 import xyz.wagyourtail.jsmacros.core.library.Library;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.SplittableRandom;
 
 /**
  * @author Etheradon

@@ -10,7 +10,12 @@ import xyz.wagyourtail.jsmacros.core.event.impl.EventCustom;
 import xyz.wagyourtail.jsmacros.core.event.impl.EventProfileLoad;
 import xyz.wagyourtail.jsmacros.core.language.BaseScriptContext;
 import xyz.wagyourtail.jsmacros.core.language.EventContainer;
-import xyz.wagyourtail.jsmacros.core.library.impl.*;
+import xyz.wagyourtail.jsmacros.core.library.impl.FFS;
+import xyz.wagyourtail.jsmacros.core.library.impl.FGlobalVars;
+import xyz.wagyourtail.jsmacros.core.library.impl.FJsMacros;
+import xyz.wagyourtail.jsmacros.core.library.impl.FReflection;
+import xyz.wagyourtail.jsmacros.core.library.impl.FRequest;
+import xyz.wagyourtail.jsmacros.core.library.impl.FTime;
 
 import java.util.ArrayList;
 import java.util.HashSet;

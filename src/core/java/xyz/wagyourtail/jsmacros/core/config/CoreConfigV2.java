@@ -7,7 +7,12 @@ import xyz.wagyourtail.jsmacros.core.event.Event;
 import xyz.wagyourtail.jsmacros.core.event.impl.EventProfileLoad;
 import xyz.wagyourtail.jsmacros.core.service.ServiceTrigger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class CoreConfigV2 {
     

@@ -1,14 +1,31 @@
 package xyz.wagyourtail.doclet.webdoclet.parsers;
 
-import com.sun.source.doctree.*;
+import com.sun.source.doctree.DocCommentTree;
+import com.sun.source.doctree.DocTree;
+import com.sun.source.doctree.LinkTree;
+import com.sun.source.doctree.LiteralTree;
+import com.sun.source.doctree.ParamTree;
+import com.sun.source.doctree.ReturnTree;
+import com.sun.source.doctree.SinceTree;
 import com.sun.source.util.DocTreePath;
 import xyz.wagyourtail.Pair;
 import xyz.wagyourtail.XMLBuilder;
 import xyz.wagyourtail.doclet.webdoclet.Main;
 import xyz.wagyourtail.doclet.webdoclet.options.Links;
 
-import javax.lang.model.element.*;
-import javax.lang.model.type.*;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

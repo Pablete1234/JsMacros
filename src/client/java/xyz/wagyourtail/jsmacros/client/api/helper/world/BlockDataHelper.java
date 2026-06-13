@@ -14,7 +14,6 @@ import xyz.wagyourtail.jsmacros.client.api.helper.NBTElementHelper;
 import xyz.wagyourtail.jsmacros.client.api.helper.TextHelper;
 import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 

@@ -6,8 +6,12 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.noties.prism4j.Prism4j.*;
-import static java.util.regex.Pattern.*;
+import static io.noties.prism4j.Prism4j.grammar;
+import static io.noties.prism4j.Prism4j.pattern;
+import static io.noties.prism4j.Prism4j.token;
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.regex.Pattern.MULTILINE;
+import static java.util.regex.Pattern.compile;
 
 /**
  * This class is from <a target="_blank" href="https://github.com/noties/Prism4j">Prism4j</a>

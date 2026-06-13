@@ -3,7 +3,13 @@ package xyz.wagyourtail;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 import java.util.function.Function;
 
 public class PrioryFiFoTaskQueue<E> implements Queue<E> {

@@ -9,7 +9,6 @@ import xyz.wagyourtail.jsmacros.client.api.classes.render.IScreen;
 import xyz.wagyourtail.jsmacros.client.mixin.access.MixinEditBox;
 import xyz.wagyourtail.jsmacros.core.MethodWrapper;
 
-import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 

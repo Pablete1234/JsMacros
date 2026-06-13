@@ -1,6 +1,10 @@
 package xyz.wagyourtail;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class XMLBuilder {
     public final Map<String, String> options = new HashMap<>();
