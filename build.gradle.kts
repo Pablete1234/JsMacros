@@ -29,6 +29,7 @@ repositories {
     maven("https://maven.fabricmc.net/")
     maven("https://maven.terraformersmc.com/releases/")
     maven("https://files.minecraftforge.net/maven/")
+    maven("https://api.modrinth.com/maven/")
     maven("https://jitpack.io")
     mavenCentral()
 }
@@ -129,6 +130,7 @@ dependencies {
     fabricModImplementation(fabricApi.fabricModule("fabric-rendering-v1", libs.versions.fapi.get()))
 
     fabricModImplementation(libs.modmenu)
+    fabricModImplementation(libs.sodium)
     fabricModImplementation(fabricApi.fabricModule("fabric-screen-api-v1", libs.versions.fapi.get()))
 
     fabricInclude(fabricApi.fabricModule("fabric-api-base", libs.versions.fapi.get()))

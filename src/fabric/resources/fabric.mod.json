@@ -26,7 +26,6 @@
     ]
   },
   "mixins": [
-    "jsmacros-common.mixins.json",
     "jsmacros-client.mixins.json",
     "jsmacros-fabric.mixins.json"
   ],
