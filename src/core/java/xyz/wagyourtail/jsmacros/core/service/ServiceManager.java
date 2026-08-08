@@ -440,11 +440,8 @@ public class ServiceManager {
             // If the service is not running because it crashed, try to restart it
             if (isEnabled(name) && (isRunning(name) || crashedServices.contains(name))) {
                 long lastModified = file.lastModified();
-                if (!lastModifiedMap.containsKey(file.getPath())) {
-                    lastModifiedMap.put(file.getPath(), lastModified);
-                    // Just assume that if the file was changed so was its content. Otherwise, use Adler-32 or MD5 checksum
-                } else if (lastModifiedMap.getLong(file) != lastModified) {
-                    lastModifiedMap.put(file.getPath(), lastModified);
+                long prevModified = lastModifiedMap.put(file.getPath(), lastModified);
+                if (lastModified != prevModified) {
                     crashedServices.remove(name);
                     restartService(name);
                 }
