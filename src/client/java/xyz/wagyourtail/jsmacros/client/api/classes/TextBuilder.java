@@ -37,6 +37,7 @@ import java.util.Objects;
  */
 @SuppressWarnings("unused")
 public class TextBuilder {
+    private static final ChatFormatting[] CHAT_FORMATS = ChatFormatting.values();
     private final MutableComponent head = Component.literal("");
     private MutableComponent self = head;
 
@@ -80,7 +81,8 @@ public class TextBuilder {
      * @since 1.3.0
      */
     public TextBuilder withColor(int color) {
-        self.withStyle(style -> style.withColor(ChatFormatting.getById(color)));
+        var formatting = color >= 0 && color < CHAT_FORMATS.length ? CHAT_FORMATS[color] : null;
+        self.withStyle(style -> style.withColor(formatting));
         return this;
     }
 

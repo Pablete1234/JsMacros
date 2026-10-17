@@ -1,14 +1,15 @@
 package xyz.wagyourtail.jsmacros.client.gui.overlays;
 
+import com.mojang.blaze3d.Blaze3D;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.util.Util;
 import xyz.wagyourtail.wagyourgui.elements.Button;
 import xyz.wagyourtail.wagyourgui.overlays.IOverlayParent;
 import xyz.wagyourtail.wagyourgui.overlays.OverlayContainer;
 
+import java.net.URI;
 import java.util.List;
 
 public class AboutOverlay extends OverlayContainer {
@@ -24,14 +25,10 @@ public class AboutOverlay extends OverlayContainer {
     public void init() {
         super.init();
         int w = width - 4;
-        this.addDrawableChild(new Button(x + width - 12, y + 2, 10, 10, textRenderer, 0, 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF, Component.literal("X"), (btn) -> this.close()));
-
-        this.addDrawableChild(new Button(x + 2, y + height - 14, w / 3, 12, textRenderer, 0, 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF, Component.literal("Website"), (btn) -> Util.getPlatform().openUri("https://jsmacros.wagyourtail.xyz")));
-
-        this.addDrawableChild(new Button(x + w / 3 + 2, y + height - 14, w / 3, 12, textRenderer, 0, 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF, Component.literal("Discord"), (btn) -> Util.getPlatform().openUri("https://discord.gg/P6W58J8")));
-
-        this.addDrawableChild(new Button(x + w * 2 / 3 + 2, y + height - 14, w / 3, 12, textRenderer, 0, 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF, Component.literal("CurseForge"), (btn) -> Util.getPlatform().openUri("https://www.curseforge.com/minecraft/mc-mods/jsmacros")));
-
+        this.addDrawableChild(new Button(x + width - 12, y + 2, 10, 10, textRenderer, 0, 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF, Component.literal("X"), _ -> this.close()));
+        this.addDrawableChild(new Button(x + 2, y + height - 14, w / 3, 12, textRenderer, 0, 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF, Component.literal("Website"), _ -> Blaze3D.openUri(URI.create("https://jsmacros.wagyourtail.xyz"))));
+        this.addDrawableChild(new Button(x + w / 3 + 2, y + height - 14, w / 3, 12, textRenderer, 0, 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF, Component.literal("Discord"), _-> Blaze3D.openUri(URI.create("https://discord.gg/P6W58J8"))));
+        this.addDrawableChild(new Button(x + w * 2 / 3 + 2, y + height - 14, w / 3, 12, textRenderer, 0, 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF, Component.literal("CurseForge"), _ -> Blaze3D.openUri(URI.create("https://www.curseforge.com/minecraft/mc-mods/jsmacros"))));
         this.setMessage(Component.translatable("jsmacros.aboutinfo"));
     }
 

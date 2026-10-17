@@ -37,11 +37,12 @@ public class FKeyBind extends BaseLibrary {
     /**
      * Dont use this one... get the raw minecraft keycode class.
      *
-     * @param keyName
+     * @param keyName A keyName like {@code key.keyboard.w}
      * @return the raw minecraft keycode class
      */
     @DocletReplaceParams("keyName: Key")
     public Key getKeyCode(String keyName) {
+        if (keyName == null) return InputConstants.UNKNOWN;
         try {
             return InputConstants.getKey(keyName);
         } catch (Exception e) {
@@ -65,26 +66,25 @@ public class FKeyBind extends BaseLibrary {
     /**
      * Sets a minecraft keybind to the specified key.
      *
-     * @param bind
-     * @param key
+     * @param bind A key bind like {@code key.forward}
+     * @param key A key name like {@code key.keyboard.w}
      * @since 1.2.2
      */
     @DocletReplaceParams("bind: Bind, key: Key | null")
     public void setKeyBind(String bind, @Nullable String key) {
-        for (KeyMapping keybind : mc.options.keyMappings) {
-            if (keybind.getName().equals(bind)) {
-                keybind.setKey(key != null ? InputConstants.getKey(key) : InputConstants.UNKNOWN);
-                KeyMapping.resetMapping();
-                return;
-            }
+        var keybind = KeyMapping.get(bind);
+        if (keybind != null) {
+            keybind.setKey(getKeyCode(key));
+            KeyMapping.resetMapping();
         }
     }
 
     /**
      * Set a key-state for a key.
+     * Note this can trigger several keybinds if they're assigned to the same key.
      *
-     * @param keyName
-     * @param keyState
+     * @param keyName A key name like {@code key.keyboard.w}
+     * @param keyState {@code true} if pressed, {@code false} otherwise
      */
     @DocletReplaceParams("keyName: Key, keyState: boolean")
     public void key(String keyName, boolean keyState) {
@@ -93,8 +93,9 @@ public class FKeyBind extends BaseLibrary {
 
     /**
      * Calls {@link #key(String, boolean)} with keyState set to true.
+     * Note this can trigger several keybinds if they're assigned to the same key.
      *
-     * @param keyName the name of the key to press
+     * @param keyName the name of the key to press like {@code key.keyboard.w}
      * @since 1.8.4
      */
     @DocletReplaceParams("keyName: Key")
@@ -104,8 +105,9 @@ public class FKeyBind extends BaseLibrary {
 
     /**
      * Calls {@link #key(String, boolean)} with keyState set to false.
+     * Note this can trigger several keybinds if they're assigned to the same key.
      *
-     * @param keyName the name of the key to release
+     * @param keyName the name of the key to release like {@code key.keyboard.w}
      * @since 1.8.4
      */
     @DocletReplaceParams("keyName: Key")
@@ -114,13 +116,15 @@ public class FKeyBind extends BaseLibrary {
     }
 
     /**
-     * Don't use this one... set the key-state using the raw minecraft keycode class.
+     * Avoid this method as it uses {@code Key} directly
+     * Note this can trigger several keybinds if they're assigned to the same key.
      *
-     * @param keyBind
-     * @param keyState
+     * @param keyBind A keybind like {@code key.keyboard.w}
+     * @param keyState {@code true} if pressed, {@code false} otherwise
      */
     protected void key(Key keyBind, boolean keyState) {
-        if (Minecraft.getInstance().screen != null) return;
+        if (Minecraft.getInstance().gui.screen() != null) return;
+        // This can potentially trigger N key mappings, that is by design
         KeyMapping.set(keyBind, keyState);
         if (keyState) {
             KeyMapping.click(keyBind);
@@ -139,35 +143,19 @@ public class FKeyBind extends BaseLibrary {
      * <p>
      * This is probably the one you should use.
      *
-     * @param keyBind
-     * @param keyState
+     * @param keyBind A keybind like {@code key.forward}
+     * @param keyState {@code true} if pressed, {@code false} otherwise
      * @since 1.2.2
      */
     @DocletReplaceParams("keyBind: Bind, keyState: boolean")
     public void keyBind(String keyBind, boolean keyState) {
-        if (Minecraft.getInstance().screen != null) return;
-        for (KeyMapping key : mc.options.keyMappings) {
-            if (key.getName().equals(keyBind)) {
-                key.setDown(keyState);
-                if (keyState) {
-                    KeyMapping.click(InputConstants.getKey(key.saveString()));
-                }
-
-                // add to pressed keys list
-                if (keyState) {
-                    KeyTracker.press(key);
-                } else {
-                    KeyTracker.unpress(key);
-                }
-                return;
-            }
-        }
+        key(KeyMapping.get(keyBind), keyState);
     }
 
     /**
      * Calls {@link #keyBind(String, boolean)} with keyState set to true.
      *
-     * @param keyBind the name of the keybinding to press
+     * @param keyBind the name of the keybinding to press like {@code key.forward}
      * @since 1.8.4
      */
     @DocletReplaceParams("keyBind: Bind")
@@ -178,7 +166,7 @@ public class FKeyBind extends BaseLibrary {
     /**
      * Calls {@link #keyBind(String, boolean)} with keyState set to false.
      *
-     * @param keyBind the name of the keybinding to release
+     * @param keyBind the name of the keybinding to release like {@code key.forward}
      * @since 1.8.4
      */
     @DocletReplaceParams("keyBind: Bind")
@@ -187,17 +175,16 @@ public class FKeyBind extends BaseLibrary {
     }
 
     /**
-     * Don't use this one... set the key-state using the raw minecraft keybind class.
+     * Avoid this method as it uses {@code KeyMapping} directly
      *
-     * @param keyBind
-     * @param keyState
+     * @param keyBind the internal key mapping to modify
+     * @param keyState {@code true} if pressed, {@code false} otherwise
      */
     protected void key(KeyMapping keyBind, boolean keyState) {
-        if (Minecraft.getInstance().screen != null) return;
+        if (Minecraft.getInstance().gui.screen() != null) return;
+        if (keyBind == null || keyBind.isDown() == keyState) return;
         keyBind.setDown(keyState);
-        if (keyState) {
-            KeyMapping.click(InputConstants.getKey(keyBind.saveString()));
-        }
+        if (keyState) keyBind.clickCount++;
 
         // add to pressed keys list
         if (keyState) {

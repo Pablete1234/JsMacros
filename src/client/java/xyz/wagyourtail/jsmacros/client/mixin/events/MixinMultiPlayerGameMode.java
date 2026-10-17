@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import xyz.wagyourtail.jsmacros.client.api.event.impl.inventory.EventDropSlot;
 import xyz.wagyourtail.jsmacros.client.api.event.impl.player.EventAttackBlock;
 import xyz.wagyourtail.jsmacros.client.api.event.impl.player.EventAttackEntity;
 import xyz.wagyourtail.jsmacros.client.api.event.impl.player.EventInteractBlock;
@@ -67,4 +68,13 @@ public class MixinMultiPlayerGameMode {
         }
     }
 
+    @Inject(method = "dropItem", at = @At("HEAD"), cancellable = true)
+    public void onDropSelected(LocalPlayer player, boolean all, CallbackInfo ci) {
+        int selectedHotbarIndex = player.getInventory().getSelectedSlot();
+        EventDropSlot event = new EventDropSlot(null, 36 + selectedHotbarIndex, all);
+        event.trigger();
+        if (event.isCanceled()) {
+            ci.cancel();
+        }
+    }
 }

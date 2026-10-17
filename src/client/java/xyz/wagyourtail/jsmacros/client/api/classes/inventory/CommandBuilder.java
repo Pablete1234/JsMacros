@@ -14,7 +14,6 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.AngleArgument;
-import net.minecraft.commands.arguments.ColorArgument;
 import net.minecraft.commands.arguments.ComponentArgument;
 import net.minecraft.commands.arguments.CompoundTagArgument;
 import net.minecraft.commands.arguments.DimensionArgument;
@@ -23,6 +22,7 @@ import net.minecraft.commands.arguments.NbtTagArgument;
 import net.minecraft.commands.arguments.ParticleArgument;
 import net.minecraft.commands.arguments.RangeArgument;
 import net.minecraft.commands.arguments.SlotArgument;
+import net.minecraft.commands.arguments.TeamColorArgument;
 import net.minecraft.commands.arguments.TimeArgument;
 import net.minecraft.commands.arguments.UuidArgument;
 import net.minecraft.commands.arguments.blocks.BlockPredicateArgument;
@@ -181,7 +181,7 @@ public abstract class CommandBuilder implements Registrable<CommandBuilder> {
     }
 
     public CommandBuilder colorArg(String name) {
-        argument(name, ColorArgument::color);
+        argument(name, TeamColorArgument::teamColor);
         return this;
     }
 

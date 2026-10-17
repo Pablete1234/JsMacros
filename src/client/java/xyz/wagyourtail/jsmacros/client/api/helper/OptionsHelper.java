@@ -27,7 +27,6 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import org.apache.commons.lang3.ArrayUtils;
-import org.lwjgl.glfw.GLFW;
 import xyz.wagyourtail.doclet.DocletDeclareType;
 import xyz.wagyourtail.doclet.DocletReplaceParams;
 import xyz.wagyourtail.doclet.DocletReplaceReturn;
@@ -344,7 +343,7 @@ public class OptionsHelper extends BaseHelper<Options> {
      */
     public OptionsHelper setWidth(int w) {
         Window win = mc.getWindow();
-        GLFW.glfwSetWindowSize(win.handle(), w, win.getScreenHeight());
+        win.setWindowed(w, win.getScreenHeight());
         return this;
     }
 
@@ -354,7 +353,7 @@ public class OptionsHelper extends BaseHelper<Options> {
      */
     public OptionsHelper setHeight(int h) {
         Window win = mc.getWindow();
-        GLFW.glfwSetWindowSize(win.handle(), win.getScreenWidth(), h);
+        win.setWindowed(win.getScreenWidth(), h);
         return this;
     }
 
@@ -365,7 +364,7 @@ public class OptionsHelper extends BaseHelper<Options> {
      */
     public OptionsHelper setSize(int w, int h) {
         Window win = mc.getWindow();
-        GLFW.glfwSetWindowSize(win.handle(), w, h);
+        win.setWindowed(w, h);
         return this;
     }
 
@@ -1421,20 +1420,20 @@ public class OptionsHelper extends BaseHelper<Options> {
         }
 
         /**
-         * @return {@code true} if touchscreen mode is enabled, {@code false} otherwise.
+         * @return always returns {@code false}, touchscreen was removed in 26.2.
          * @since 1.8.4
          */
         public boolean isTouchscreenEnabled() {
-            return base.touchscreen().get();
+            return false;
         }
 
         /**
-         * @param val whether to enable touchscreen mode or not
+         * No-op since 26.2 removed touchscreen mode.
+         * @param val ignored param
          * @return self for chaining.
          * @since 1.8.4
          */
         public ControlOptionsHelper enableTouchscreen(boolean val) {
-            base.touchscreen().set(val);
             return this;
         }
 
@@ -1442,20 +1441,21 @@ public class OptionsHelper extends BaseHelper<Options> {
          * Raw input is directly reading the mouse data, without any adjustments due to other
          * programs or the operating system.
          *
-         * @return {@code true} if raw mouse input is enabled, {@code false} otherwise.
+         * @return always returns {@code true}, 26.3 uses SDL which has no separate raw-mouse option.
          * @since 1.8.4
          */
         public boolean isRawMouseInputEnabled() {
-            return base.rawMouseInput().get();
+            return true;
         }
 
         /**
+         * No-op since 26.3, SDL has no raw-mouse option.
+         *
          * @param val whether to enable raw mouse input or not
          * @return self for chaining.
          * @since 1.8.4
          */
         public ControlOptionsHelper enableRawMouseInput(boolean val) {
-            base.rawMouseInput().set(val);
             return this;
         }
 

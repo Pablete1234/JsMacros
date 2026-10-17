@@ -1,8 +1,17 @@
 package xyz.wagyourtail.jsmacros.client.api.classes.render.components;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.renderpearl.api.pipeline.CompareOp;
+import com.mojang.renderpearl.api.pipeline.DepthStencilState;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
@@ -12,6 +21,9 @@ import xyz.wagyourtail.jsmacros.client.api.classes.RegistryHelper;
 import xyz.wagyourtail.jsmacros.client.api.classes.render.IDraw2D;
 import xyz.wagyourtail.jsmacros.client.util.ColorUtil;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * @author Wagyourtail
  * @since 1.2.3
@@ -20,6 +32,14 @@ import xyz.wagyourtail.jsmacros.client.util.ColorUtil;
 public class Image implements RenderElement, Alignable<Image> {
 
     private static final Minecraft mc = Minecraft.getInstance();
+
+    private static final RenderPipeline ENTITY_TRANSLUCENT_SEE_THROUGH = RenderPipeline.builder(RenderPipelines.ENTITY_SNIPPET)
+            .withLocation("pipeline/jsmacros/entity_translucent_see_through")
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+            .withCull(false)
+            .build();
+    private static final Map<Identifier, RenderType> ENTITY_TRANSLUCENT_SEE_THROUGH_TYPES = new ConcurrentHashMap<>();
+
 
     private Identifier imageid;
     @Nullable
@@ -61,6 +81,7 @@ public class Image implements RenderElement, Alignable<Image> {
     }
 
     public Image(int x, int y, int width, int height, int zIndex, int alpha, int color, String id, int imageX, int imageY, int regionWidth, int regionHeight, int textureWidth, int textureHeight, float rotation) {
+        this.zIndex = zIndex;
         setPos(x, y, width, height);
         setColor(color, alpha);
         setImage(id, imageX, imageY, regionWidth, regionHeight, textureWidth, textureHeight);
@@ -318,6 +339,61 @@ public class Image implements RenderElement, Alignable<Image> {
                 this.textureHeight,
                 this.color);
         matrices.popMatrix();
+    }
+
+    @Override
+    public void render3D(PoseStack matrixStack, int light, boolean seeThrough, SubmitNodeCollector collector, float delta) {
+        matrixStack.pushPose();
+        setupMatrix(matrixStack, x, y, 1, rotation, getWidth(), getHeight(), rotateCenter);
+
+        int a = (color >> 24) & 0xFF;
+        int r = (color >> 16) & 0xFF;
+        int g = (color >> 8)  & 0xFF;
+        int b = color         & 0xFF;
+
+        float u0 = this.imageX / (float) this.textureWidth;
+        float v0 = this.imageY / (float) this.textureHeight;
+        float u1 = (this.imageX + this.regionWidth) / (float) this.textureWidth;
+        float v1 = (this.imageY + this.regionHeight) / (float) this.textureHeight;
+
+        RenderType layer = seeThrough
+                ? ENTITY_TRANSLUCENT_SEE_THROUGH_TYPES.computeIfAbsent(imageid, textureId -> RenderType.create(
+                "jsmacros_entity_translucent_see_through_" + textureId,
+                RenderSetup.builder(ENTITY_TRANSLUCENT_SEE_THROUGH)
+                        .withTexture("Sampler0", textureId)
+                        .useLightmap()
+                        .useOverlay()
+                        .createRenderSetup()))
+                : RenderTypes.entityTranslucent(imageid);
+        collector.submitCustomGeometry(matrixStack, layer, (pose, vc) -> {
+            // Quad: top-left, bottom-left, bottom-right, top-right (counter-clockwise when viewed from front)
+            vc.addVertex(pose, x, y, 0)
+                    .setColor(r, g, b, a)
+                    .setUv(u0, v0)
+                    .setOverlay(OverlayTexture.NO_OVERLAY)
+                    .setLight(light)
+                    .setNormal(pose, 0, 0, 1);
+            vc.addVertex(pose, x, y + height, 0)
+                    .setColor(r, g, b, a)
+                    .setUv(u0, v1)
+                    .setOverlay(OverlayTexture.NO_OVERLAY)
+                    .setLight(light)
+                    .setNormal(pose, 0, 0, 1);
+            vc.addVertex(pose, x + width, y + height, 0)
+                    .setColor(r, g, b, a)
+                    .setUv(u1, v1)
+                    .setOverlay(OverlayTexture.NO_OVERLAY)
+                    .setLight(light)
+                    .setNormal(pose, 0, 0, 1);
+            vc.addVertex(pose, x + width, y, 0)
+                    .setColor(r, g, b, a)
+                    .setUv(u1, v0)
+                    .setOverlay(OverlayTexture.NO_OVERLAY)
+                    .setLight(light)
+                    .setNormal(pose, 0, 0, 1);
+        });
+
+        matrixStack.popPose();
     }
 
     public Image setParent(IDraw2D<?> parent) {

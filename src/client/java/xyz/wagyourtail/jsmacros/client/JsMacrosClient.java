@@ -30,7 +30,6 @@ import net.minecraft.client.gui.screens.inventory.StonecutterScreen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 import xyz.wagyourtail.jsmacros.client.api.event.impl.EventQuitGame;
 import xyz.wagyourtail.jsmacros.client.api.helper.PacketByteBufferHelper;
 import xyz.wagyourtail.jsmacros.client.config.ClientConfigV2;
@@ -48,7 +47,7 @@ import java.lang.reflect.InvocationTargetException;
 public class JsMacrosClient extends JsMacros {
     public static KeyMapping.Category keyBindingCategory = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("jsmacros", "title"));
 
-    public static KeyMapping keyBinding = new KeyMapping("jsmacros.menu", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, keyBindingCategory);
+    public static KeyMapping keyBinding = new KeyMapping("jsmacros.menu", InputConstants.Type.KEYBOARD, InputConstants.KEY_K, keyBindingCategory);
     public static final Core<ClientProfile, EventRegistry> clientCore = new Core<>(EventRegistry::new, ClientProfile::new, configFolder.getAbsoluteFile(), new File(configFolder, "Macros"), LOGGER);
 
     private static BaseScreen prevScreen;

@@ -7,6 +7,11 @@
   "authors": [
     "wagyourtail"
   ],
+  "contributors": [
+    "Pablete1234",
+    "Jack Manning",
+    "grepsedawk"
+  ],
   "contact": {
     "homepage": "https://wagyourtail.xyz/",
     "sources": "https://github.com/wagyourtail/JsMacros"
@@ -31,6 +36,6 @@
   ],
   "depends": {
     "fabricloader": ">=0.15.0",
-    "minecraft": ["26.1.2"]
+    "minecraft": ["26.3"]
   }
 }

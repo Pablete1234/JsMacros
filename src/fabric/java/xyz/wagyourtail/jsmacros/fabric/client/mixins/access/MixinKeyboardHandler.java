@@ -15,7 +15,7 @@ public class MixinKeyboardHandler {
 
     @WrapOperation(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyPressed(Lnet/minecraft/client/input/KeyEvent;)Z"))
     private boolean onKeyPressed(Screen instance, KeyEvent event, Operation<Boolean> original) {
-        ((IScreenInternal) instance).jsmacros_keyPressed(event.key(), event.scancode(), event.modifiers());
+        ((IScreenInternal) instance).jsmacros_keyPressed(event.key(), event.keycode(), event.modifiers());
         return original.call(instance, event);
     }
 

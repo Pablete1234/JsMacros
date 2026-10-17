@@ -1,6 +1,10 @@
 package xyz.wagyourtail.jsmacros.client.api.classes.render.components;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2fStack;
@@ -272,7 +276,8 @@ public class Line implements RenderElement, Alignable<Line> {
         matrices.pushMatrix();
         setupMatrix(matrices, x1, y1, 1, rotation, getScaledWidth(), getScaledHeight(), rotateCenter);
 
-        float halfWidth = this.width / 2.0f;
+        int top = -(int) Math.floor(this.width / 2.0f);
+        int bottom = (int) Math.ceil(this.width / 2.0f);
         float dx = this.x2 - this.x1;
         float dy = this.y2 - this.y1;
         float length = (float) Math.sqrt(dx * dx + dy * dy);
@@ -283,12 +288,39 @@ public class Line implements RenderElement, Alignable<Line> {
 
         drawContext.fill(
                 0,
-                (int) -halfWidth,
+                top,
                 (int) length,
-                (int) halfWidth,
+                bottom,
                 this.color
         );
+
         matrices.popMatrix();
+    }
+
+    @Override
+    public void render3D(PoseStack matrixStack, int light, boolean seeThrough, SubmitNodeCollector collector, float delta) {
+        matrixStack.pushPose();
+        setupMatrix(matrixStack, x1, y1, 1, rotation, getScaledWidth(), getScaledHeight(), rotateCenter);
+
+        float brightness = RenderElement.lightBrightness(light);
+        int a = ((color >> 24) & 0xFF);
+        int r = (int) (((color >> 16) & 0xFF)  * brightness);
+        int g = (int) (((color >> 8)  & 0xFF)  * brightness);
+        int b = (int) ((color         & 0xFF)  * brightness);
+
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float len = (float) Math.sqrt(dx * dx + dy * dy);
+        float nx = len > 0 ? dx / len : 0;
+        float ny = len > 0 ? dy / len : 0;
+
+        RenderType lineLayer = seeThrough ? RenderTypes.linesTranslucent() : RenderTypes.lines();
+        collector.submitCustomGeometry(matrixStack, lineLayer, (pose, vc) -> {
+            vc.addVertex(pose, x1, y1, 0).setColor(r, g, b, a).setLineWidth(width).setNormal(pose, nx, ny, 0);
+            vc.addVertex(pose, x2, y2, 0).setColor(r, g, b, a).setLineWidth(width).setNormal(pose, nx, ny, 0);
+        });
+
+        matrixStack.popPose();
     }
 
     public Line setParent(IDraw2D<?> parent) {

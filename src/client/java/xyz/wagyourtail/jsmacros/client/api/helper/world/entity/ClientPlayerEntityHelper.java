@@ -4,18 +4,13 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -23,7 +18,6 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -31,19 +25,20 @@ import xyz.wagyourtail.doclet.DocletReplaceParams;
 import xyz.wagyourtail.doclet.DocletReplaceReturn;
 import xyz.wagyourtail.jsmacros.api.math.Pos3D;
 import xyz.wagyourtail.jsmacros.api.math.Vec3D;
-import xyz.wagyourtail.jsmacros.client.JsMacrosClient;
 import xyz.wagyourtail.jsmacros.client.access.IItemCooldownEntry;
 import xyz.wagyourtail.jsmacros.client.access.IItemCooldownManager;
 import xyz.wagyourtail.jsmacros.client.api.classes.RegistryHelper;
 import xyz.wagyourtail.jsmacros.client.api.helper.AdvancementManagerHelper;
+import xyz.wagyourtail.jsmacros.client.api.helper.InteractionManagerHelper;
 import xyz.wagyourtail.jsmacros.client.api.helper.inventory.ItemStackHelper;
 import xyz.wagyourtail.jsmacros.client.api.helper.world.BlockPosHelper;
 import xyz.wagyourtail.jsmacros.client.api.helper.world.BlockStateHelper;
+import xyz.wagyourtail.jsmacros.client.util.MainThread;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.Semaphore;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -106,18 +101,8 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
     /**
      * @since 1.8.4
      */
-    private ClientPlayerEntityHelper<T> setPos(Vec3 pos, boolean await) throws InterruptedException {
-        boolean joinedMain = JsMacrosClient.clientCore.profile.checkJoinedThreadStack();
-        if (joinedMain) {
-            base.setPos(pos);
-        } else {
-            Semaphore wait = new Semaphore(await ? 0 : 1);
-            mc.execute(() -> {
-                base.setPos(pos);
-                wait.release();
-            });
-            wait.acquire();
-        }
+    private ClientPlayerEntityHelper<T> setPos(Vec3 pos, boolean await) {
+        MainThread.run(() -> base.setPos(pos), await);
         return this;
     }
 
@@ -324,7 +309,7 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      * @deprecated moved to {@code Player.getInteractionManager()}
      */
     @Deprecated
-    public ClientPlayerEntityHelper<T> attack(EntityHelper<?> entity) throws InterruptedException {
+    public ClientPlayerEntityHelper<T> attack(EntityHelper<?> entity) {
         return attack(entity, false);
     }
 
@@ -335,26 +320,8 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      * @deprecated moved to {@code Player.getInteractionManager()}
      */
     @Deprecated
-    public ClientPlayerEntityHelper<T> attack(EntityHelper<?> entity, boolean await) throws InterruptedException {
-        boolean joinedMain = JsMacrosClient.clientCore.profile.checkJoinedThreadStack();
-        assert mc.gameMode != null;
-        if (entity.getRaw() == mc.player) {
-            throw new AssertionError("Can't interact with self!");
-        }
-        if (joinedMain) {
-            mc.gameMode.attack(mc.player, entity.getRaw());
-            assert mc.player != null;
-            mc.player.swing(InteractionHand.MAIN_HAND);
-        } else {
-            Semaphore wait = new Semaphore(await ? 0 : 1);
-            mc.execute(() -> {
-                mc.gameMode.attack(mc.player, entity.getRaw());
-                assert mc.player != null;
-                mc.player.swing(InteractionHand.MAIN_HAND);
-                wait.release();
-            });
-            wait.acquire();
-        }
+    public ClientPlayerEntityHelper<T> attack(EntityHelper<?> entity, boolean await) {
+        new InteractionManagerHelper(mc.gameMode).attack(entity, await);
         return this;
     }
 
@@ -369,7 +336,7 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      */
     @Deprecated
     @DocletReplaceParams("x: int, y: int, z: int, direction: Direction")
-    public ClientPlayerEntityHelper<T> attack(int x, int y, int z, String direction) throws InterruptedException {
+    public ClientPlayerEntityHelper<T> attack(int x, int y, int z, String direction) {
         return attack(x, y, z, direction, false);
     }
 
@@ -383,7 +350,7 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      */
     @Deprecated
     @DocletReplaceParams("x: int, y: int, z: int, direction: Hexit")
-    public ClientPlayerEntityHelper<T> attack(int x, int y, int z, int direction) throws InterruptedException {
+    public ClientPlayerEntityHelper<T> attack(int x, int y, int z, int direction) {
         return attack(x, y, z, direction, false);
     }
 
@@ -399,7 +366,7 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      */
     @Deprecated
     @DocletReplaceParams("x: int, y: int, z: int, direction: Direction, await: boolean")
-    public ClientPlayerEntityHelper<T> attack(int x, int y, int z, String direction, boolean await) throws InterruptedException {
+    public ClientPlayerEntityHelper<T> attack(int x, int y, int z, String direction, boolean await) {
         return attack(x, y, z, Direction.byName(direction.toLowerCase(Locale.ROOT)), await);
     }
 
@@ -409,33 +376,17 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      * @param z
      * @param direction 0-5 in order: [DOWN, UP, NORTH, SOUTH, WEST, EAST];
      * @param await
-     * @throws InterruptedException
      * @since 1.6.0
      * @deprecated moved to {@code Player.getInteractionManager()}
      */
     @Deprecated
     @DocletReplaceParams("x: int, y: int, z: int, direction: Hexit, await: boolean")
-    public ClientPlayerEntityHelper<T> attack(int x, int y, int z, int direction, boolean await) throws InterruptedException {
+    public ClientPlayerEntityHelper<T> attack(int x, int y, int z, int direction, boolean await) {
         return attack(x, y, z, Direction.from3DDataValue(direction), await);
     }
 
-    private ClientPlayerEntityHelper<T> attack(int x, int y, int z, Direction direction, boolean await) throws InterruptedException {
-        assert mc.gameMode != null;
-        boolean joinedMain = JsMacrosClient.clientCore.profile.checkJoinedThreadStack();
-        if (joinedMain) {
-            mc.gameMode.startDestroyBlock(new BlockPos(x, y, z), direction);
-            assert mc.player != null;
-            mc.player.swing(InteractionHand.MAIN_HAND);
-        } else {
-            Semaphore wait = new Semaphore(await ? 0 : 1);
-            mc.execute(() -> {
-                mc.gameMode.startDestroyBlock(new BlockPos(x, y, z), direction);
-                assert mc.player != null;
-                mc.player.swing(InteractionHand.MAIN_HAND);
-                wait.release();
-            });
-            wait.acquire();
-        }
+    private ClientPlayerEntityHelper<T> attack(int x, int y, int z, Direction direction, boolean await) {
+        new InteractionManagerHelper(mc.gameMode).attack(x, y, z, direction, await);
         return this;
     }
 
@@ -446,7 +397,7 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      * @deprecated moved to {@code Player.getInteractionManager()}
      */
     @Deprecated
-    public ClientPlayerEntityHelper<T> interactEntity(EntityHelper<?> entity, boolean offHand) throws InterruptedException {
+    public ClientPlayerEntityHelper<T> interactEntity(EntityHelper<?> entity, boolean offHand) {
         return interactEntity(entity, offHand, false);
     }
 
@@ -454,37 +405,13 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      * @param entity
      * @param offHand
      * @param await
-     * @throws InterruptedException
      * @since 1.6.0
      * @deprecated moved to {@code Player.getInteractionManager()}
      */
     @Deprecated
-    public ClientPlayerEntityHelper<T> interactEntity(EntityHelper<?> entity, boolean offHand, boolean await) throws InterruptedException {
+    public ClientPlayerEntityHelper<T> interactEntity(EntityHelper<?> entity, boolean offHand, boolean await) {
         assert mc.gameMode != null;
-        if (entity.getRaw() == mc.player) {
-            throw new AssertionError("Can't interact with self!");
-        }
-        var rawEntity = entity.getRaw();
-        InteractionHand hand = offHand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
-        boolean joinedMain = JsMacrosClient.clientCore.profile.checkJoinedThreadStack();
-        if (joinedMain) {
-            InteractionResult result = mc.gameMode.interact(mc.player, rawEntity, new EntityHitResult(rawEntity), hand);
-            assert mc.player != null;
-            if (result.consumesAction()) {
-                mc.player.swing(hand);
-            }
-        } else {
-            Semaphore wait = new Semaphore(await ? 0 : 1);
-            mc.execute(() -> {
-                InteractionResult result = mc.gameMode.interact(mc.player, rawEntity, new EntityHitResult(rawEntity), hand);
-                assert mc.player != null;
-                if (result.consumesAction()) {
-                    mc.player.swing(hand);
-                }
-                wait.release();
-            });
-            wait.acquire();
-        }
+        new InteractionManagerHelper(mc.gameMode).interactEntity(entity, offHand, await);
         return this;
     }
 
@@ -494,7 +421,7 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      * @deprecated moved to {@code Player.getInteractionManager()}
      */
     @Deprecated
-    public ClientPlayerEntityHelper<T> interactItem(boolean offHand) throws InterruptedException {
+    public ClientPlayerEntityHelper<T> interactItem(boolean offHand) {
         return interactItem(offHand, false);
     }
 
@@ -505,28 +432,8 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      * @deprecated moved to {@code Player.getInteractionManager()}
      */
     @Deprecated
-    public ClientPlayerEntityHelper<T> interactItem(boolean offHand, boolean await) throws InterruptedException {
-        assert mc.gameMode != null;
-        InteractionHand hand = offHand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
-        boolean joinedMain = JsMacrosClient.clientCore.profile.checkJoinedThreadStack();
-        if (joinedMain) {
-            InteractionResult result = mc.gameMode.useItem(mc.player, hand);
-            assert mc.player != null;
-            if (result.consumesAction()) {
-                mc.player.swing(hand);
-            }
-        } else {
-            Semaphore wait = new Semaphore(await ? 0 : 1);
-            mc.execute(() -> {
-                InteractionResult result = mc.gameMode.useItem(mc.player, hand);
-                assert mc.player != null;
-                if (result.consumesAction()) {
-                    mc.player.swing(hand);
-                }
-                wait.release();
-            });
-            wait.acquire();
-        }
+    public ClientPlayerEntityHelper<T> interactItem(boolean offHand, boolean await) {
+        new InteractionManagerHelper(mc.gameMode).interactItem(offHand, await);
         return this;
     }
 
@@ -541,7 +448,7 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      */
     @Deprecated
     @DocletReplaceParams("x: int, y: int, z: int, direction: Direction, offHand: boolean")
-    public ClientPlayerEntityHelper<T> interactBlock(int x, int y, int z, String direction, boolean offHand) throws InterruptedException {
+    public ClientPlayerEntityHelper<T> interactBlock(int x, int y, int z, String direction, boolean offHand) {
         return interactBlock(x, y, z, direction, offHand, false);
     }
 
@@ -556,7 +463,7 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      */
     @Deprecated
     @DocletReplaceParams("x: int, y: int, z: int, direction: Hexit, offHand: boolean")
-    public ClientPlayerEntityHelper<T> interactBlock(int x, int y, int z, int direction, boolean offHand) throws InterruptedException {
+    public ClientPlayerEntityHelper<T> interactBlock(int x, int y, int z, int direction, boolean offHand) {
         return interactBlock(x, y, z, direction, offHand, false);
     }
 
@@ -572,7 +479,7 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      */
     @Deprecated
     @DocletReplaceParams("x: int, y: int, z: int, direction: Direction, offHand: boolean, await: boolean")
-    public ClientPlayerEntityHelper<T> interactBlock(int x, int y, int z, String direction, boolean offHand, boolean await) throws InterruptedException {
+    public ClientPlayerEntityHelper<T> interactBlock(int x, int y, int z, String direction, boolean offHand, boolean await) {
         return interactBlock(x, y, z, Direction.byName(direction.toLowerCase(Locale.ROOT)), offHand, await);
     }
 
@@ -588,34 +495,12 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      */
     @Deprecated
     @DocletReplaceParams("x: int, y: int, z: int, direction: Hexit, offHand: boolean, await: boolean")
-    public ClientPlayerEntityHelper<T> interactBlock(int x, int y, int z, int direction, boolean offHand, boolean await) throws InterruptedException {
+    public ClientPlayerEntityHelper<T> interactBlock(int x, int y, int z, int direction, boolean offHand, boolean await) {
         return interactBlock(x, y, z, Direction.from3DDataValue(direction), offHand, await);
     }
 
-    public ClientPlayerEntityHelper<T> interactBlock(int x, int y, int z, Direction direction, boolean offHand, boolean await) throws InterruptedException {
-        assert mc.gameMode != null;
-        InteractionHand hand = offHand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
-        boolean joinedMain = JsMacrosClient.clientCore.profile.checkJoinedThreadStack();
-        if (joinedMain) {
-            InteractionResult result = mc.gameMode.useItemOn(mc.player, hand,
-                    new BlockHitResult(new Vec3(x, y, z), direction, new BlockPos(x, y, z), false));
-            assert mc.player != null;
-            if (result.consumesAction()) {
-                mc.player.swing(hand);
-            }
-        } else {
-            Semaphore wait = new Semaphore(await ? 0 : 1);
-            mc.execute(() -> {
-                InteractionResult result = mc.gameMode.useItemOn(mc.player, hand,
-                        new BlockHitResult(new Vec3(x, y, z), direction, new BlockPos(x, y, z), false));
-                assert mc.player != null;
-                if (result.consumesAction()) {
-                    mc.player.swing(hand);
-                }
-                wait.release();
-            });
-            wait.acquire();
-        }
+    public ClientPlayerEntityHelper<T> interactBlock(int x, int y, int z, Direction direction, boolean offHand, boolean await) {
+        new InteractionManagerHelper(mc.gameMode).interactBlock(x, y, z, direction, offHand, await);
         return this;
     }
 
@@ -624,7 +509,7 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      * @deprecated moved to {@code Player.getInteractionManager()}
      */
     @Deprecated
-    public ClientPlayerEntityHelper<T> interact() throws InterruptedException {
+    public ClientPlayerEntityHelper<T> interact() {
         return interact(false);
     }
 
@@ -634,18 +519,8 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      * @deprecated moved to {@code Player.getInteractionManager()}
      */
     @Deprecated
-    public ClientPlayerEntityHelper<T> interact(boolean await) throws InterruptedException {
-        boolean joinedMain = JsMacrosClient.clientCore.profile.checkJoinedThreadStack();
-        if (joinedMain) {
-            mc.startUseItem();
-        } else {
-            Semaphore wait = new Semaphore(await ? 0 : 1);
-            mc.execute(() -> {
-                mc.startUseItem();
-                wait.release();
-            });
-            wait.acquire();
-        }
+    public ClientPlayerEntityHelper<T> interact(boolean await) {
+        new InteractionManagerHelper(mc.gameMode).interact(await);
         return this;
     }
 
@@ -654,7 +529,7 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      * @deprecated moved to {@code Player.getInteractionManager()}
      */
     @Deprecated
-    public ClientPlayerEntityHelper<T> attack() throws InterruptedException {
+    public ClientPlayerEntityHelper<T> attack() {
         return attack(false);
     }
 
@@ -664,18 +539,8 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      * @deprecated moved to {@code Player.getInteractionManager()}
      */
     @Deprecated
-    public ClientPlayerEntityHelper<T> attack(boolean await) throws InterruptedException {
-        boolean joinedMain = JsMacrosClient.clientCore.profile.checkJoinedThreadStack();
-        if (joinedMain) {
-            mc.startAttack();
-        } else {
-            Semaphore wait = new Semaphore(await ? 0 : 1);
-            mc.execute(() -> {
-                mc.startAttack();
-                wait.release();
-            });
-            wait.acquire();
-        }
+    public ClientPlayerEntityHelper<T> attack(boolean await) {
+        new InteractionManagerHelper(mc.gameMode).attack(await);
         return this;
     }
 
@@ -718,8 +583,8 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
     @DocletReplaceReturn("JavaMap<ItemId, int>")
     public Map<String, Integer> getItemCooldownsRemainingTicks() {
         int tick = ((IItemCooldownManager) base.getCooldowns()).jsmacros_getManagerTicks();
-        Map<Item, IItemCooldownEntry> map = ((IItemCooldownManager) base.getCooldowns()).jsmacros_getCooldownItems();
-        return map.entrySet().stream().collect(Collectors.toMap(e -> BuiltInRegistries.ITEM.getKey(e.getKey()).toString(), e -> e.getValue().jsmacros_getEndTick() - tick));
+        var map = ((IItemCooldownManager) base.getCooldowns()).jsmacros_getCooldownItems();
+        return map.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().jsmacros_getEndTick() - tick));
     }
 
     /**
@@ -730,8 +595,8 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
     @DocletReplaceParams("item: CanOmitNamespace<ItemId>")
     public int getItemCooldownRemainingTicks(String item) {
         int tick = ((IItemCooldownManager) base.getCooldowns()).jsmacros_getManagerTicks();
-        Map<Item, IItemCooldownEntry> map = ((IItemCooldownManager) base.getCooldowns()).jsmacros_getCooldownItems();
-        IItemCooldownEntry entry = map.get(BuiltInRegistries.ITEM.getValue(RegistryHelper.parseIdentifier(item)));
+        var map = ((IItemCooldownManager) base.getCooldowns()).jsmacros_getCooldownItems();
+        IItemCooldownEntry entry = map.get(RegistryHelper.parseIdentifier(item));
         if (entry == null) {
             return -1;
         }
@@ -745,8 +610,8 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
     @DocletReplaceReturn("JavaMap<ItemId, int>")
     public Map<String, Integer> getTicksSinceCooldownsStart() {
         int tick = ((IItemCooldownManager) base.getCooldowns()).jsmacros_getManagerTicks();
-        Map<Item, IItemCooldownEntry> map = ((IItemCooldownManager) base.getCooldowns()).jsmacros_getCooldownItems();
-        return map.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().getName(e.getKey().getDefaultInstance()).getString(), e -> e.getValue().jsmacros_getStartTick() - tick));
+        var map = ((IItemCooldownManager) base.getCooldowns()).jsmacros_getCooldownItems();
+        return map.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().jsmacros_getStartTick() - tick));
     }
 
     /**
@@ -757,8 +622,8 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
     @DocletReplaceParams("item: CanOmitNamespace<ItemId>")
     public int getTicksSinceCooldownStart(String item) {
         int tick = ((IItemCooldownManager) base.getCooldowns()).jsmacros_getManagerTicks();
-        Map<Item, IItemCooldownEntry> map = ((IItemCooldownManager) base.getCooldowns()).jsmacros_getCooldownItems();
-        IItemCooldownEntry entry = map.get(BuiltInRegistries.ITEM.getValue(RegistryHelper.parseIdentifier(item)));
+        var map = ((IItemCooldownManager) base.getCooldowns()).jsmacros_getCooldownItems();
+        IItemCooldownEntry entry = map.get(RegistryHelper.parseIdentifier(item));
         if (entry == null) {
             return -1;
         }
@@ -788,7 +653,7 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      * @since 1.8.4
      */
     public ClientPlayerEntityHelper<?> dropHeldItem(boolean dropStack) {
-        base.drop(dropStack);
+        Objects.requireNonNull(mc.gameMode).dropItem(base, dropStack);
         return this;
     }
 
@@ -797,7 +662,7 @@ public class ClientPlayerEntityHelper<T extends LocalPlayer> extends PlayerEntit
      * @since 1.8.4
      */
     public AdvancementManagerHelper getAdvancementManager() {
-        return new AdvancementManagerHelper(base.connection.getAdvancements().getTree());
+        return new AdvancementManagerHelper(base.connection.getAdvancements().tree());
     }
 
     /**

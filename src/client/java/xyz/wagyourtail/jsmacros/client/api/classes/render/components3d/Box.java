@@ -1,7 +1,7 @@
 package xyz.wagyourtail.jsmacros.client.api.classes.render.components3d;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.gizmos.CuboidGizmo;
 import net.minecraft.gizmos.GizmoProperties;
 import net.minecraft.gizmos.GizmoStyle;
@@ -42,8 +42,6 @@ public class Box implements RenderElement3D<Box> {
         this.fill = fill;
         this.cull = cull;
     }
-
-    // ... All methods from setPos to compareToSame are unchanged ...
 
     /**
      * @param x1
@@ -103,7 +101,7 @@ public class Box implements RenderElement3D<Box> {
      * @since 1.0.6
      */
     public void setFillColor(int fillColor) {
-        this.fillColor = fillColor;
+        this.fillColor = ColorUtil.fixAlpha(fillColor);
     }
 
     /**
@@ -129,7 +127,7 @@ public class Box implements RenderElement3D<Box> {
      * @since 1.1.8
      */
     public void setFillColor(int fillColor, int alpha) {
-        this.fillColor = fillColor | (alpha << 24);
+        this.fillColor = (fillColor & 0xFFFFFF) | (alpha << 24);
     }
 
     /**
@@ -171,7 +169,7 @@ public class Box implements RenderElement3D<Box> {
 
     @Override
     @DocletIgnore
-    public void render(PoseStack matrixStack, MultiBufferSource consumers, float tickDelta) {
+    public void render(PoseStack matrixStack, SubmitNodeCollector collector, float tickDelta) {
         GizmoProperties gizmo = Gizmos.addGizmo(new CuboidGizmo(
                 new AABB(pos.getStart().toMojangDoubleVector(), pos.getEnd().toMojangDoubleVector()),
                 new GizmoStyle(color, 2.5f, fill ? fillColor : 0),
@@ -181,7 +179,6 @@ public class Box implements RenderElement3D<Box> {
         }
     }
 
-    // ... Builder class is unchanged ...
     /**
      * @author Etheradon
      * @since 1.8.4
@@ -368,7 +365,7 @@ public class Box implements RenderElement3D<Box> {
          * @since 1.8.4
          */
         public Builder color(int color, int alpha) {
-            this.color = fillColor;
+            this.color = color;
             this.alpha = alpha;
             return this;
         }

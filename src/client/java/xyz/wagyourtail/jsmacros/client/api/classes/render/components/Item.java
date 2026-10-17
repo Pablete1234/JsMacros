@@ -1,10 +1,16 @@
 package xyz.wagyourtail.jsmacros.client.api.classes.render.components;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2fStack;
@@ -22,6 +28,8 @@ import xyz.wagyourtail.jsmacros.client.api.helper.inventory.ItemStackHelper;
 public class Item implements RenderElement, Alignable<Item> {
 
     private static final int DEFAULT_ITEM_SIZE = 16;
+    private static final float FLAT_ITEM_DEPTH_SCALE = 0.001f;
+    private static final float OVERLAY_TEXT_Z_OFFSET = 0.001f;
     private static final Minecraft mc = Minecraft.getInstance();
 
     @Nullable
@@ -256,8 +264,37 @@ public class Item implements RenderElement, Alignable<Item> {
 
     @Override
     @DocletIgnore
-    public void render3D(GuiGraphicsExtractor drawContext, int mouseX, int mouseY, float delta) {
-        render(drawContext, mouseX, mouseY, delta, true);
+    public void render3D(PoseStack matrixStack, int light, boolean seeThrough, SubmitNodeCollector collector, float delta) {
+        if (item == null) {
+            return;
+        }
+        matrixStack.pushPose();
+        setupMatrix(matrixStack, x, y, (float) scale, rotation, DEFAULT_ITEM_SIZE, DEFAULT_ITEM_SIZE, rotateCenter);
+
+        ItemStackRenderState renderState = new ItemStackRenderState();
+        mc.getItemModelResolver().updateForTopItem(renderState, item, ItemDisplayContext.GUI, mc.level, mc.player, 0);
+
+        matrixStack.pushPose();
+        matrixStack.translate(DEFAULT_ITEM_SIZE / 2d, DEFAULT_ITEM_SIZE / 2d, 0);
+        matrixStack.scale(DEFAULT_ITEM_SIZE, -DEFAULT_ITEM_SIZE, DEFAULT_ITEM_SIZE * FLAT_ITEM_DEPTH_SCALE);
+        renderState.submit(matrixStack, collector, light, OverlayTexture.NO_OVERLAY, 0);
+        matrixStack.popPose();
+
+        if (overlay) {
+            String text = ovText != null ? ovText : (item.getCount() > 1 ? String.valueOf(item.getCount()) : null);
+            if (text != null) {
+                Font font = mc.font;
+                // Text offset
+                float tx = DEFAULT_ITEM_SIZE + 1 - font.width(text);
+                float ty = 9;
+                matrixStack.pushPose();
+                matrixStack.translate(0, 0, OVERLAY_TEXT_Z_OFFSET);
+                collector.submitText(matrixStack, tx, ty, Component.literal(text).getVisualOrderText(), true, Font.DisplayMode.POLYGON_OFFSET, light, 0xFFFFFFFF, 0, 0);
+                matrixStack.popPose();
+            }
+        }
+
+        matrixStack.popPose();
     }
 
     @DocletIgnore
@@ -339,7 +376,7 @@ public class Item implements RenderElement, Alignable<Item> {
         private int x = 0;
         private int y = 0;
         private ItemStackHelper itemStack = new ItemStackHelper(ItemStack.EMPTY);
-        private String ovText = "";
+        private String ovText;
         private boolean overlay = false;
         private double scale = 1;
         private float rotation = 0;

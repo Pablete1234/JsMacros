@@ -1,6 +1,15 @@
 package xyz.wagyourtail.jsmacros.client.api.classes.render.components;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.renderpearl.api.pipeline.CompareOp;
+import com.mojang.renderpearl.api.pipeline.DepthStencilState;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2fStack;
@@ -13,6 +22,16 @@ import xyz.wagyourtail.jsmacros.client.util.ColorUtil;
  */
 @SuppressWarnings("unused")
 public class Rect implements RenderElement, Alignable<Rect> {
+
+    private static final RenderPipeline DEBUG_QUADS_SEE_THROUGH = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+            .withLocation("pipeline/jsmacros/debug_quads_see_through")
+            .withCull(false)
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+            .build();
+    private static final RenderType DEBUG_QUADS_SEE_THROUGH_TYPE = RenderType.create(
+            "jsmacros_debug_quads_see_through",
+            RenderSetup.builder(DEBUG_QUADS_SEE_THROUGH).createRenderSetup());
+
 
     @Nullable
     public IDraw2D<?> parent;
@@ -311,6 +330,28 @@ public class Rect implements RenderElement, Alignable<Rect> {
         setupMatrix(matrices, x1, y1, 1, rotation, getWidth(), getHeight(), rotateCenter);
         drawContext.fill(x1, y1, x2, y2, this.color);
         matrices.popMatrix();
+    }
+
+    @Override
+    public void render3D(PoseStack matrixStack, int light, boolean seeThrough, SubmitNodeCollector collector, float delta) {
+        matrixStack.pushPose();
+        setupMatrix(matrixStack, x1, y1, 1, rotation, getWidth(), getHeight(), rotateCenter);
+
+        float brightness = RenderElement.lightBrightness(light);
+        int a = ((color >> 24) & 0xFF);
+        int r = (int) (((color >> 16) & 0xFF) * brightness);
+        int g = (int) (((color >> 8)  & 0xFF) * brightness);
+        int b = (int) ((color         & 0xFF) * brightness);
+
+        RenderType fillLayer = seeThrough ? DEBUG_QUADS_SEE_THROUGH_TYPE : RenderTypes.debugQuads();
+        collector.submitCustomGeometry(matrixStack, fillLayer, (pose, vc) -> {
+            vc.addVertex(pose, x1, y1, 0).setColor(r, g, b, a);
+            vc.addVertex(pose, x2, y1, 0).setColor(r, g, b, a);
+            vc.addVertex(pose, x2, y2, 0).setColor(r, g, b, a);
+            vc.addVertex(pose, x1, y2, 0).setColor(r, g, b, a);
+        });
+
+        matrixStack.popPose();
     }
 
     public Rect setParent(IDraw2D<?> parent) {

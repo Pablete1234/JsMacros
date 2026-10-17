@@ -57,7 +57,7 @@ public class DisplayEntityHelper<T extends Display> extends EntityHelper<T> {
      * @since 1.9.1
      */
     public Vec3D getVisibilityBoundingBox() {
-        AABB box = base.getBoundingBoxForCulling();
+        AABB box = base.getInterpolatedBoundingBox(0);
         return new Vec3D(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
     }
 

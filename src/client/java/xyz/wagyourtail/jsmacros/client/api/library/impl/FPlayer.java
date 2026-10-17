@@ -2,7 +2,6 @@ package xyz.wagyourtail.jsmacros.client.api.library.impl;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
-import net.minecraft.client.gui.screens.inventory.SignEditScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.network.chat.Component;
@@ -185,11 +184,11 @@ public class FPlayer extends BaseLibrary {
      * @since 1.2.2
      */
     public boolean writeSign(@Nullable String l1, @Nullable String l2, @Nullable String l3, @Nullable String l4) {
-        if (mc.screen instanceof SignEditScreen screen) {
-            if (l1 != null) ((ISignEditScreen) screen).jsmacros_setLine(0, l1);
-            if (l2 != null) ((ISignEditScreen) screen).jsmacros_setLine(1, l2);
-            if (l3 != null) ((ISignEditScreen) screen).jsmacros_setLine(2, l3);
-            if (l4 != null) ((ISignEditScreen) screen).jsmacros_setLine(3, l4);
+        if (mc.gui.screen() instanceof ISignEditScreen screen) {
+            if (l1 != null) screen.jsmacros_setLine(0, l1);
+            if (l2 != null) screen.jsmacros_setLine(1, l2);
+            if (l3 != null) screen.jsmacros_setLine(2, l3);
+            if (l4 != null) screen.jsmacros_setLine(3, l4);
             return true;
         }
         return false;
@@ -206,8 +205,8 @@ public class FPlayer extends BaseLibrary {
         if ((index & ~3) != 0) {
             throw new IndexOutOfBoundsException("Index should be in between 0 and 3!!  provided: " + index);
         }
-        if (mc.screen instanceof SignEditScreen screen) {
-            ((ISignEditScreen) screen).jsmacros_setLine(index, message);
+        if (mc.gui.screen() instanceof ISignEditScreen screen) {
+            screen.jsmacros_setLine(index, message);
             return true;
         }
         return false;
@@ -221,7 +220,7 @@ public class FPlayer extends BaseLibrary {
      */
     public void takeScreenshot(String folder, @Nullable MethodWrapper<TextHelper, Object, Object, ?> callback) {
         assert folder != null;
-        Screenshot.grab(new File(runner.config.macroFolder, folder), mc.getMainRenderTarget(),
+        Screenshot.grab(new File(runner.config.macroFolder, folder), mc.gameRenderer.mainRenderTarget(),
                 (text) -> {
                     if (callback != null) {
                         callback.accept(TextHelper.wrap(text));
@@ -241,7 +240,7 @@ public class FPlayer extends BaseLibrary {
      */
     public void takeScreenshot(String folder, String file, @Nullable MethodWrapper<TextHelper, Object, Object, ?> callback) {
         assert folder != null && file != null;
-        Screenshot.grab(new File(runner.config.macroFolder, folder), file, mc.getMainRenderTarget(), 0,
+        Screenshot.grab(new File(runner.config.macroFolder, folder), file, mc.gameRenderer.mainRenderTarget(), 0,
                 (text) -> {
                     if (callback != null) {
                         callback.accept(TextHelper.wrap(text));

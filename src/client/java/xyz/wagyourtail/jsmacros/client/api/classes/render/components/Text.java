@@ -1,22 +1,18 @@
 package xyz.wagyourtail.jsmacros.client.api.classes.render.components;
 
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2fStack;
 import org.joml.Matrix3x2fc;
-import org.joml.Matrix4f;
-import org.lwjgl.system.MemoryStack;
 import xyz.wagyourtail.doclet.DocletIgnore;
 import xyz.wagyourtail.jsmacros.client.api.classes.TextBuilder;
 import xyz.wagyourtail.jsmacros.client.api.classes.render.IDraw2D;
 import xyz.wagyourtail.jsmacros.client.api.helper.TextHelper;
 import xyz.wagyourtail.jsmacros.client.util.ColorUtil;
-
-import java.nio.FloatBuffer;
 
 /**
  * @author Wagyourtail
@@ -271,38 +267,18 @@ public class Text implements RenderElement, Alignable<Text> {
         Matrix3x2fStack matrices = drawContext.pose();
         matrices.pushMatrix();
         setupMatrix(matrices, x, y, (float) scale, rotation, getWidth(), getHeight(), rotateCenter);
-        drawContext.text(mc.font, text, 0, 0, color, shadow);
+        drawContext.text(mc.font, text, x, y, color, shadow);
         matrices.popMatrix();
     }
 
     @Override
     @DocletIgnore
-    public void render3D(GuiGraphicsExtractor drawContext, int mouseX, int mouseY, float delta) {
-        Matrix3x2fStack matrices = drawContext.pose();
-        matrices.pushMatrix();
-        setupMatrix(matrices, x, y, (float) scale, rotation, getWidth(), getHeight(), rotateCenter);
-        Matrix4f matrix4f;
-        try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-            FloatBuffer buf = memoryStack.mallocFloat(16);
-            matrices.get4x4(buf);
-            buf.rewind();
-            matrix4f = new Matrix4f().set(buf);
-        }
-        MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(new ByteBufferBuilder(1536));
-        mc.font.drawInBatch(
-            text,
-            x,
-            y,
-            color,
-            shadow,
-            matrix4f,
-            buffer,
-            Font.DisplayMode.NORMAL,
-            0,
-            0xFFF000F0
-        );
-        buffer.endBatch();
-        matrices.popMatrix();
+    public void render3D(PoseStack matrixStack, int light, boolean seeThrough, SubmitNodeCollector collector, float delta) {
+        matrixStack.pushPose();
+        setupMatrix(matrixStack, x, y, (float) scale, rotation, getWidth(), getHeight(), rotateCenter);
+        collector.submitText(matrixStack, x, y, text.getVisualOrderText(), shadow,
+                seeThrough ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL, light, color, 0, 0);
+        matrixStack.popPose();
     }
 
     public Text setParent(IDraw2D<?> parent) {

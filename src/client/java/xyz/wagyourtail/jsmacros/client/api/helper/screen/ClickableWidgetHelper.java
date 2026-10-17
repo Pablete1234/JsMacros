@@ -1,5 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.api.helper.screen;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -7,18 +8,16 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
-import xyz.wagyourtail.jsmacros.client.JsMacrosClient;
 import xyz.wagyourtail.jsmacros.client.api.classes.TextBuilder;
 import xyz.wagyourtail.jsmacros.client.api.classes.render.IScreen;
 import xyz.wagyourtail.jsmacros.client.api.classes.render.components.Alignable;
 import xyz.wagyourtail.jsmacros.client.api.classes.render.components.RenderElement;
 import xyz.wagyourtail.jsmacros.client.api.helper.TextHelper;
+import xyz.wagyourtail.jsmacros.client.util.MainThread;
 import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 
 /**
@@ -162,7 +161,7 @@ public class ClickableWidgetHelper<B extends ClickableWidgetHelper<B, T>, T exte
      *
      * @since 1.3.1
      */
-    public B click() throws InterruptedException {
+    public B click() {
         click(true);
         return (B) this;
     }
@@ -173,27 +172,15 @@ public class ClickableWidgetHelper<B extends ClickableWidgetHelper<B, T>, T exte
      * @param await should wait for button to finish clicking.
      * @since 1.3.1
      */
-    public B click(boolean await) throws InterruptedException {
-        if (JsMacrosClient.clientCore.profile.checkJoinedThreadStack()) {
+    public B click(boolean await) {
+        MainThread.run(() -> {
             MouseButtonEvent ev = new MouseButtonEvent(
                     base.getX(),
                     base.getY(),
-                    new MouseButtonInfo(GLFW.GLFW_MOUSE_BUTTON_LEFT, 0));
+                    new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, 0));
             base.mouseClicked(ev, false);
             base.mouseReleased(ev);
-        } else {
-            final Semaphore waiter = new Semaphore(await ? 0 : 1);
-            Minecraft.getInstance().execute(() -> {
-                MouseButtonEvent ev = new MouseButtonEvent(
-                        base.getX(),
-                        base.getY(),
-                        new MouseButtonInfo(GLFW.GLFW_MOUSE_BUTTON_LEFT, 0));
-                base.mouseClicked(ev, false);
-                base.mouseReleased(ev);
-                waiter.release();
-            });
-            waiter.acquire();
-        }
+        }, await);
         return (B) this;
     }
 
@@ -283,7 +270,7 @@ public class ClickableWidgetHelper<B extends ClickableWidgetHelper<B, T>, T exte
 
     @Override
     public int getParentWidth() {
-        return Minecraft.getInstance().screen.width;
+        return Minecraft.getInstance().gui.screen().width;
     }
 
     @Override
@@ -293,7 +280,7 @@ public class ClickableWidgetHelper<B extends ClickableWidgetHelper<B, T>, T exte
 
     @Override
     public int getParentHeight() {
-        return Minecraft.getInstance().screen.height;
+        return Minecraft.getInstance().gui.screen().height;
     }
 
     @Override

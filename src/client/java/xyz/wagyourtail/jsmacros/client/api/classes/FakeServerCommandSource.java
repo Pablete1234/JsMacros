@@ -29,7 +29,7 @@ public class FakeServerCommandSource extends CommandSourceStack {
 
     public FakeServerCommandSource(ClientSuggestionProvider source, LocalPlayer player) {
         super(null, player.position(), player.getRotationVector(), null,
-                PermissionSet.ALL_PERMISSIONS, player.getName().getString(), player.getDisplayName(), null, player);
+                PermissionSet.ALL_PERMISSIONS, null, player);
         this.source = source;
     }
 

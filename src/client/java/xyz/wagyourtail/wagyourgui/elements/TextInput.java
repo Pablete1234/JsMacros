@@ -1,5 +1,6 @@
 package xyz.wagyourtail.wagyourgui.elements;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -7,7 +8,6 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
@@ -113,7 +113,7 @@ public class TextInput extends Button {
                 arrowCursor = selStartIndex;
             }
             switch (keyCode) {
-                case GLFW.GLFW_KEY_BACKSPACE:
+                case InputConstants.KEY_BACKSPACE:
                     if (selStartIndex == selEndIndex && selStartIndex > 0) {
                         updateSelStart(selStartIndex - 1);
                     }
@@ -124,7 +124,7 @@ public class TextInput extends Button {
                     updateSelEnd(selStartIndex);
                     arrowCursor = selStartIndex;
                     break;
-                case GLFW.GLFW_KEY_DELETE:
+                case InputConstants.KEY_DELETE:
                     if (selStartIndex == selEndIndex && selStartIndex < content.length()) {
                         updateSelEnd(selEndIndex + 1);
                     }
@@ -135,15 +135,15 @@ public class TextInput extends Button {
                     updateSelEnd(selStartIndex);
                     arrowCursor = selStartIndex;
                     break;
-                case GLFW.GLFW_KEY_HOME:
+                case InputConstants.KEY_HOME:
                     updateSelStart(0);
                     updateSelEnd(0);
                     break;
-                case GLFW.GLFW_KEY_END:
+                case InputConstants.KEY_END:
                     this.updateSelStart(content.length());
                     this.updateSelEnd(content.length());
                     break;
-                case GLFW.GLFW_KEY_LEFT:
+                case InputConstants.KEY_LEFT:
                     ctrl = !event.hasControlDown();
                     if (arrowCursor > 0) {
                         if (arrowCursor < selEndIndex) {
@@ -159,7 +159,7 @@ public class TextInput extends Button {
                         }
                     }
                     break;
-                case GLFW.GLFW_KEY_RIGHT:
+                case InputConstants.KEY_RIGHT:
                     ctrl = !event.hasControlDown();
                     if (arrowCursor < content.length()) {
                         if (arrowCursor < selEndIndex) {
@@ -203,8 +203,10 @@ public class TextInput extends Button {
         return false;
     }
 
-    public void setSelected(boolean sel) {
-        this.setFocused(sel);
+    @Override
+    public void setFocused(boolean focused) {
+        super.setFocused(focused);
+        Minecraft.getInstance().onTextInputFocusChange(this, focused);
     }
 
     @Override

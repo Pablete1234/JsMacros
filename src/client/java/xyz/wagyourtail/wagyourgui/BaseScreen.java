@@ -1,5 +1,6 @@
 package xyz.wagyourtail.wagyourgui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -15,7 +16,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 import xyz.wagyourtail.jsmacros.client.JsMacrosClient;
 import xyz.wagyourtail.wagyourgui.overlays.IOverlayParent;
 import xyz.wagyourtail.wagyourgui.overlays.OverlayContainer;
@@ -127,7 +127,7 @@ public abstract class BaseScreen extends Screen implements IOverlayParent {
     @Override
     public boolean keyPressed(KeyEvent event) {
         var keyCode = event.key();
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+        if (keyCode == InputConstants.KEY_ESCAPE) {
             if (overlay != null) {
                 this.overlay.closeOverlay(this.overlay.getChildOverlay());
                 return true;
@@ -139,7 +139,7 @@ public abstract class BaseScreen extends Screen implements IOverlayParent {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horiz, double vert) {
         if (overlay != null && overlay.scroll != null) {
-            var ev = new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(GLFW.GLFW_MOUSE_BUTTON_LEFT, 0));
+            var ev = new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, 0));
             overlay.scroll.mouseDragged(ev, 0, -vert * 2);
         }
         return super.mouseScrolled(mouseX, mouseY, horiz, vert);
@@ -175,13 +175,13 @@ public abstract class BaseScreen extends Screen implements IOverlayParent {
             openParent();
         } else {
             setFocused(null);
-            minecraft.setScreen(null);
+            minecraft.gui.setScreen(null);
         }
     }
 
     public void openParent() {
         assert minecraft != null;
-        minecraft.setScreen(parent);
+        minecraft.gui.setScreen(parent);
     }
 
 }

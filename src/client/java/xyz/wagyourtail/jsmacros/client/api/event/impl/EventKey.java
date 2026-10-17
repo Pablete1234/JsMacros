@@ -45,7 +45,13 @@ public class EventKey extends BaseEvent {
     )
     public final String mods;
 
-    private static final Set<Integer> wasNullOnDown = new HashSet<>();
+    private static final Set<InputConstants.Key> wasNullOnDown = new HashSet<>();
+    private static final InputConstants.Key LEFT_SHIFT = InputConstants.Type.KEYBOARD.getOrCreate(InputConstants.KEY_LSHIFT);
+    private static final InputConstants.Key RIGHT_SHIFT = InputConstants.Type.KEYBOARD.getOrCreate(InputConstants.KEY_RSHIFT);
+    private static final InputConstants.Key LEFT_CONTROL = InputConstants.Type.KEYBOARD.getOrCreate(InputConstants.KEY_LCONTROL);
+    private static final InputConstants.Key RIGHT_CONTROL = InputConstants.Type.KEYBOARD.getOrCreate(InputConstants.KEY_RCONTROL);
+    private static final InputConstants.Key LEFT_ALT = InputConstants.Type.KEYBOARD.getOrCreate(InputConstants.KEY_LALT);
+    private static final InputConstants.Key RIGHT_ALT = InputConstants.Type.KEYBOARD.getOrCreate(InputConstants.KEY_RALT);
 
     public EventKey(int action, String key, String mods) {
         super(JsMacrosClient.clientCore);
@@ -54,16 +60,8 @@ public class EventKey extends BaseEvent {
         this.mods = mods;
     }
 
-    public static boolean parse(int key, int scancode, int action, int mods) {
-        InputConstants.Key keycode;
-        if (key <= 7) {
-            keycode = InputConstants.Type.MOUSE.getOrCreate(key);
-        } else {
-            keycode = InputConstants.Type.KEYSYM.getOrCreate(key);
-        }
-
+    public static boolean parse(InputConstants.Key keycode, int action, int mods) {
         String keyStr = keycode.getName();
-        String modsStr = getKeyModifiers(mods);
 
         if (keycode == InputConstants.UNKNOWN) {
             return false;
@@ -75,15 +73,15 @@ public class EventKey extends BaseEvent {
             FKeyBind.KeyTracker.unpress(keycode);
         }
 
-        if (mc.screen != null) {
-            if (action != 0 || !wasNullOnDown.contains(key)) {
+        if (mc.gui.screen() != null) {
+            if (action != InputConstants.RELEASE || !wasNullOnDown.contains(keycode)) {
                 if (JsMacrosClient.clientCore.config.getOptions(ClientConfigV2.class).disableKeyWhenScreenOpen) {
                     return false;
                 }
-                if (mc.screen instanceof BaseScreen) {
+                if (mc.gui.screen() instanceof BaseScreen) {
                     return false;
                 }
-                GuiEventListener focused = mc.screen.getFocused();
+                GuiEventListener focused = mc.gui.screen().getFocused();
                 if (focused instanceof EditBox) {
                     return false;
                 }
@@ -91,25 +89,26 @@ public class EventKey extends BaseEvent {
                     return false;
                 }
             }
-        } else if (action == 1) {
-            wasNullOnDown.add(key);
+        } else if (action == InputConstants.PRESS) {
+            wasNullOnDown.add(keycode);
         }
 
-        if (action == 0) {
-            wasNullOnDown.remove(key);
+        if (action == InputConstants.RELEASE) {
+            wasNullOnDown.remove(keycode);
         }
 
         // fix mods if it was a mod key
-        if (action == 1) {
-            if (key == 340 || key == 344) {
-                mods -= 1;
-            } else if (key == 341 || key == 345) {
-                mods -= 2;
-            } else if (key == 342 || key == 346) {
-                mods -= 4;
+        if (action == InputConstants.PRESS) {
+            if (keycode.equals(LEFT_SHIFT) || keycode.equals(RIGHT_SHIFT)) {
+                mods &= ~InputConstants.MOD_SHIFT;
+            } else if (keycode.equals(LEFT_CONTROL) || keycode.equals(RIGHT_CONTROL)) {
+                mods &= ~InputConstants.MOD_CONTROL;
+            } else if (keycode.equals(LEFT_ALT) || keycode.equals(RIGHT_ALT)) {
+                mods &= ~InputConstants.MOD_ALT;
             }
         }
 
+        String modsStr = getKeyModifiers(mods);
         EventKey ev = new EventKey(action, keyStr, modsStr);
         ev.trigger();
         return ev.isCanceled();

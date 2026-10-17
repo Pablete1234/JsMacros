@@ -19,6 +19,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
@@ -47,6 +48,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.security.PublicKey;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
@@ -306,7 +308,8 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      * @since 1.8.4
      */
     public <T> PacketByteBufferHelper writeCollection(Collection<T> collection, MethodWrapper<FriendlyByteBuf, T, ?, ?> writer) {
-        base.writeCollection(collection, writer::accept);
+        base.writeVarInt(collection.size());
+        collection.forEach(el -> writer.accept(base, el));
         return this;
     }
 
@@ -316,7 +319,12 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      * @since 1.8.4
      */
     public <T> List<T> readList(MethodWrapper<FriendlyByteBuf, ?, T, ?> reader) {
-        return base.readList(reader::apply);
+        int size = base.readVarInt();
+        List<T> values = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            values.add(reader.apply(base));
+        }
+        return values;
     }
 
     /**
@@ -325,7 +333,8 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      * @since 1.8.4
      */
     public PacketByteBufferHelper writeIntList(Collection<Integer> list) {
-        base.writeIntIdList(new IntArrayList(list));
+        base.writeVarInt(list.size());
+        list.forEach(this::writeVarInt);
         return this;
     }
 
@@ -334,7 +343,12 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      * @since 1.8.4
      */
     public IntList readIntList() {
-        return base.readIntIdList();
+        int count = base.readVarInt();
+        IntList result = new IntArrayList(count);
+        for (int i = 0; i < count; i++) {
+            result.add(base.readVarInt());
+        }
+        return result;
     }
 
     /**
@@ -345,7 +359,11 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      * @since 1.8.4
      */
     public <K, V> PacketByteBufferHelper writeMap(Map<K, V> map, MethodWrapper<FriendlyByteBuf, K, ?, ?> keyWriter, MethodWrapper<FriendlyByteBuf, V, ?, ?> valueWriter) {
-        base.writeMap(map, keyWriter::accept, valueWriter::accept);
+        base.writeVarInt(map.size());
+        map.forEach((k, v) -> {
+            keyWriter.accept(base, k);
+            valueWriter.accept(base, v);
+        });
         return this;
     }
 
@@ -356,7 +374,12 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      * @since 1.8.4
      */
     public <K, V> Map<K, V> readMap(MethodWrapper<FriendlyByteBuf, ?, K, ?> keyReader, MethodWrapper<FriendlyByteBuf, ?, V, ?> valueReader) {
-        return base.readMap(keyReader::apply, valueReader::apply);
+        int size = base.readVarInt();
+        Map<K, V> values = new HashMap<>(size);
+        for (int i = 0; i < size; i++) {
+            values.put(keyReader.apply(base), valueReader.apply(base));
+        }
+        return values;
     }
 
     /**
@@ -810,7 +833,7 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      * @since 1.8.4
      */
     public PacketByteBufferHelper writeInstant(Instant instant) {
-        base.writeInstant(instant);
+        base.writeLong(instant.toEpochMilli());
         return this;
     }
 
@@ -819,7 +842,7 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      * @since 1.8.4
      */
     public Instant readInstant() {
-        return base.readInstant();
+        return Instant.ofEpochMilli(base.readLong());
     }
 
     /**
@@ -828,7 +851,7 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      * @since 1.8.4
      */
     public PacketByteBufferHelper writePublicKey(PublicKey key) {
-        base.writePublicKey(key);
+        ByteBufCodecs.PUBLIC_KEY.encode(base, key);
         return this;
     }
 
@@ -837,7 +860,7 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      * @since 1.8.4
      */
     public PublicKey readPublicKey() {
-        return base.readPublicKey();
+        return ByteBufCodecs.PUBLIC_KEY.decode(base);
     }
 
     /**
@@ -848,7 +871,7 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      */
     @Deprecated
     public PacketByteBufferHelper writeBlockHitResult(BlockHitResult hitResult) {
-        base.writeBlockHitResult(hitResult);
+        BlockHitResult.STREAM_CODEC.encode(base, hitResult);
         return this;
     }
 
@@ -858,7 +881,7 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      * @since 1.9.1
      */
     public PacketByteBufferHelper writeBlockHitResult(HitResultHelper.Block hitResult) {
-        base.writeBlockHitResult(hitResult.getRaw());
+        BlockHitResult.STREAM_CODEC.encode(base, hitResult.getRaw());
         return this;
     }
 
@@ -878,7 +901,7 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
         } else {
             result = new BlockHitResult(pos.toMojangDoubleVector(), Direction.valueOf(direction), blockPos.getRaw(), insideBlock);
         }
-        base.writeBlockHitResult(result);
+        writeBlockHitResult(result);
         return this;
     }
 
@@ -889,7 +912,7 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      */
     @Deprecated
     public BlockHitResult readBlockHitResult() {
-        return base.readBlockHitResult();
+        return BlockHitResult.STREAM_CODEC.decode(base);
     }
 
     /**
@@ -899,7 +922,7 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      */
     @Deprecated
     public Map<String, Object> readBlockHitResultMap() {
-        BlockHitResult hitResult = base.readBlockHitResult();
+        BlockHitResult hitResult = readBlockHitResult();
         return ImmutableMap.of("side", new DirectionHelper(hitResult.getDirection()), "blockPos", new BlockPosHelper(hitResult.getBlockPos()), "missed", hitResult.getType() == HitResult.Type.MISS, "inside", hitResult.isInside());
     }
 
@@ -908,7 +931,7 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
      * @since 1.9.1
      */
     public HitResultHelper.Block readBlockHitResultHelper() {
-        return new HitResultHelper.Block(base.readBlockHitResult());
+        return new HitResultHelper.Block(readBlockHitResult());
     }
 
     /**
@@ -1671,7 +1694,7 @@ public class PacketByteBufferHelper extends BaseHelper<FriendlyByteBuf> {
         PACKETS.put("OpenHorseScreenS2CPacket", net.minecraft.network.protocol.game.ClientboundMountScreenOpenPacket.class);
         PACKETS.put("CommandExecutionC2SPacket", net.minecraft.network.protocol.game.ServerboundChatCommandPacket.class);
         PACKETS.put("CraftRequestC2SPacket", net.minecraft.network.protocol.game.ServerboundPlaceRecipePacket.class);
-        PACKETS.put("HandSwingC2SPacket", net.minecraft.network.protocol.game.ServerboundSwingPacket.class);
+        PACKETS.put("HandSwingC2SPacket", net.minecraft.network.protocol.game.ClientboundSwingAnimationPacket.class);
         PACKETS.put("HandshakeC2SPacket", net.minecraft.network.protocol.handshake.ClientIntentionPacket.class);
         PACKETS.put("ChunkRenderDistanceCenterS2CPacket", net.minecraft.network.protocol.game.ClientboundSetChunkCacheCenterPacket.class);
         PACKETS.put("CommonPongC2SPacket", net.minecraft.network.protocol.common.ServerboundPongPacket.class);

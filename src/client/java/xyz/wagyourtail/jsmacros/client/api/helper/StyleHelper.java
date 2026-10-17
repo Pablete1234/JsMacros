@@ -4,12 +4,14 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import org.jetbrains.annotations.Nullable;
 import xyz.wagyourtail.doclet.DocletReplaceReturn;
 import xyz.wagyourtail.jsmacros.access.CustomClickEvent;
 import xyz.wagyourtail.jsmacros.client.api.helper.inventory.ItemStackHelper;
 import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
 
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -38,23 +40,24 @@ public class StyleHelper extends BaseHelper<Style> {
     /**
      * @return the formatting of this style, or {@code null} if no formatting was found.
      * @since 1.8.4
+     * @deprecated not all colors can fit a legacy index.
      */
+    @Deprecated
     @Nullable
     public FormattingHelper getFormatting() {
-        ChatFormatting f = ChatFormatting.getByName(base.getColor().serialize());
-        return f == null ? null : new FormattingHelper(f);
+        var legacy = legacyColor();
+        return legacy == null ? null : new FormattingHelper(legacy);
     }
 
     /**
      * @return the color index of this style or {@code -1} if no color is set.
      * @since 1.8.4
+     * @deprecated not all colors can fit a legacy index.
      */
+    @Deprecated
     public int getColorIndex() {
-        if (base.getColor() == null) {
-            return -1;
-        }
-        ChatFormatting f = ChatFormatting.getByName(base.getColor().serialize());
-        return f == null ? -1 : f.getId();
+        var legacy = legacyColor();
+        return legacy == null ? -1 : legacy.ordinal();
     }
 
     /**
@@ -62,11 +65,8 @@ public class StyleHelper extends BaseHelper<Style> {
      * @since 1.8.4
      */
     public int getColorValue() {
-        if (base.getColor() == null) {
-            return -1;
-        }
-        ChatFormatting f = ChatFormatting.getByName(base.getColor().serialize());
-        return f == null || f.getColor() == null ? -1 : f.getColor();
+        TextColor color = base.getColor();
+        return color == null ? -1 : color.getValue();
     }
 
     /**
@@ -79,7 +79,7 @@ public class StyleHelper extends BaseHelper<Style> {
     }
 
     public boolean hasCustomColor() {
-        return base.getColor() != null && base.getColor().serialize().startsWith("#");
+        return base.getColor() != null && base.getColor().name == null;
     }
 
     public int getCustomColor() {
@@ -159,9 +159,16 @@ public class StyleHelper extends BaseHelper<Style> {
         return base.getInsertion();
     }
 
+    @Nullable
+    private ChatFormatting legacyColor() {
+        var color = base.getColor();
+        return color == null || color.name == null ? null :
+                ChatFormatting.valueOf(color.name.toUpperCase(Locale.ROOT));
+    }
+
     @Override
     public String toString() {
-        return "StyleHelper:{\"color\": \"" + (hasColor() ? hasCustomColor() ? getCustomColor() : String.format("%x", getColorIndex()) : "none") + "\"" +
+        return "StyleHelper:{\"color\": \"" + (hasColor() ? getColorName() : "none") + "\"" +
                 ", \"bold\": " + bold() +
                 ", \"italic\": " + italic() +
                 ", \"underlined\": " + underlined() +

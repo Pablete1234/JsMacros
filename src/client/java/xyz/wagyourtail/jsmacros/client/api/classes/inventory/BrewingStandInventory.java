@@ -1,11 +1,9 @@
 package xyz.wagyourtail.jsmacros.client.api.classes.inventory;
 
 import net.minecraft.client.gui.screens.inventory.BrewingStandScreen;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.alchemy.PotionBrewing;
-import net.minecraft.world.item.alchemy.PotionContents;
-import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
+import net.minecraft.world.item.crafting.PotionIngredient;
+import net.minecraft.world.item.crafting.RecipeAccess;
+import net.minecraft.world.item.crafting.RecipePropertySet;
 import xyz.wagyourtail.jsmacros.client.api.helper.inventory.ItemStackHelper;
 
 import java.util.Arrays;
@@ -30,11 +28,7 @@ public class BrewingStandInventory extends Inventory<BrewingStandScreen> {
      * @since 1.8.4
      */
     public boolean isBrewablePotion(ItemStackHelper potion) {
-        PotionContents pot = potion.getRaw().get(DataComponents.POTION_CONTENTS);
-        if (pot != null && pot.potion().isPresent()) {
-            return Objects.requireNonNull(mc.getConnection()).potionBrewing().isBrewablePotion(pot.potion().get());
-        }
-        return false;
+        return !potion.isEmpty() && PotionIngredient.isPotionInput(potion.getRaw(), recipes());
     }
 
     /**
@@ -43,7 +37,7 @@ public class BrewingStandInventory extends Inventory<BrewingStandScreen> {
      * @since 1.8.4
      */
     public boolean isValidIngredient(ItemStackHelper ingredient) {
-        return Objects.requireNonNull(mc.getConnection()).potionBrewing().isIngredient(ingredient.getRaw());
+        return !ingredient.isEmpty() && recipes().propertySet(RecipePropertySet.BREWING_REAGENTS).test(ingredient.getRaw());
     }
 
     /**
@@ -52,9 +46,11 @@ public class BrewingStandInventory extends Inventory<BrewingStandScreen> {
      * @return {@code true} if the given potion and ingredient can be brewed together, {@code false}
      * otherwise.
      * @since 1.8.4
+     * @deprecated The client no longer has the required info for this, low-effort attempt is made instead
      */
+    @Deprecated
     public boolean isValidRecipe(ItemStackHelper potion, ItemStackHelper ingredient) {
-        return Objects.requireNonNull(mc.getConnection()).potionBrewing().hasMix(potion.getRaw(), ingredient.getRaw());
+        return isBrewablePotion(potion) && isValidIngredient(ingredient);
     }
 
     /**
@@ -66,31 +62,28 @@ public class BrewingStandInventory extends Inventory<BrewingStandScreen> {
     }
 
     /**
-     * The maximum fuel count is a constant with the value 20.
-     *
      * @return the maximum fuel.
      * @since 1.8.4
      */
     public int getMaxFuelUses() {
-        return BrewingStandBlockEntity.FUEL_USES;
+        return inventory.getMenu().getTotalFuel();
     }
 
     /**
      * @return {@code true} if the brewing stand can brew any of the held potions with the current
      * ingredient, {@code false} otherwise.
      * @since 1.8.4
+     * @deprecated The client no longer has the required info for this
      */
+    @Deprecated
     public boolean canBrewCurrentInput() {
         ItemStackHelper ingredient = getIngredient();
-        if (ingredient.isEmpty()) {
+        if (ingredient.isEmpty() || !isValidIngredient(ingredient)) {
             return false;
-        } else if (!isValidIngredient(ingredient)) {
-            return false;
-        } else {
-            for (ItemStackHelper stack : getPotions()) {
-                if (!stack.isEmpty() && isValidRecipe(stack, ingredient)) {
-                    return true;
-                }
+        }
+        for (ItemStackHelper stack : getPotions()) {
+            if (!stack.isEmpty() && isValidRecipe(stack, ingredient)) {
+                return true;
             }
         }
         return false;
@@ -101,7 +94,7 @@ public class BrewingStandInventory extends Inventory<BrewingStandScreen> {
      * @since 1.8.4
      */
     public int getBrewTime() {
-        return PotionBrewing.BREWING_TIME_SECONDS * 20 - inventory.getMenu().getBrewingTicks();
+        return inventory.getMenu().getTotalBrewingTicks() - inventory.getMenu().getBrewingTicks();
     }
 
     /**
@@ -118,18 +111,22 @@ public class BrewingStandInventory extends Inventory<BrewingStandScreen> {
      * @return the resulting potion of the given potion and ingredient if it exists and the potion
      * itself otherwise.
      * @since 1.8.4
+     * @deprecated The client no longer has the required info for this
      */
+    @Deprecated
     public ItemStackHelper previewPotion(ItemStackHelper potion, ItemStackHelper ingredient) {
-        return new ItemStackHelper(Objects.requireNonNull(mc.getConnection()).potionBrewing().mix(ingredient.getRaw(), potion.getRaw()));
+        return potion;
     }
 
     /**
      * @return a list of all resulting potions of the current input.
      * @since 1.8.4
+     * @deprecated The client no longer has the required info for this
      */
+    @Deprecated
     public List<ItemStackHelper> previewPotions() {
-        ItemStack ingredient = getIngredient().getRaw();
-        return getPotions().stream().map(stack -> new ItemStackHelper(Objects.requireNonNull(mc.getConnection()).potionBrewing().mix(ingredient, stack.getRaw()))).collect(Collectors.toList());
+        var ingredient = getIngredient();
+        return getPotions().stream().map(stack -> previewPotion(stack, ingredient)).collect(Collectors.toList());
     }
 
     /**
@@ -178,6 +175,10 @@ public class BrewingStandInventory extends Inventory<BrewingStandScreen> {
      */
     public List<ItemStackHelper> getPotions() {
         return Arrays.asList(getSlot(0), getSlot(1), getSlot(2));
+    }
+
+    private RecipeAccess recipes() {
+        return Objects.requireNonNull(mc.getConnection()).recipes();
     }
 
     @Override

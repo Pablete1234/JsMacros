@@ -39,7 +39,6 @@ public class TextPrompt extends OverlayContainer {
         }));
 
         setFocused(ti);
-        ti.setSelected(true);
     }
 
     @Override

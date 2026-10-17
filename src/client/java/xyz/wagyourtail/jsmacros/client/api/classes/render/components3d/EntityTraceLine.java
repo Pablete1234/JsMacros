@@ -1,12 +1,13 @@
 package xyz.wagyourtail.jsmacros.client.api.classes.render.components3d;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import xyz.wagyourtail.jsmacros.client.api.classes.render.Draw3D;
 import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.EntityHelper;
+import xyz.wagyourtail.jsmacros.client.util.ColorUtil;
 
 import static xyz.wagyourtail.jsmacros.client.api.classes.render.components.RenderElement.mc;
 
@@ -33,6 +34,11 @@ public class EntityTraceLine extends TraceLine {
         setEntity(entity).setYOffset(yOffset);
     }
 
+    public EntityTraceLine(@Nullable EntityHelper<?> entity, int color, int alpha, double yOffset, boolean alwaysOnTop) {
+        super(0, 0, 0, color, alpha, alwaysOnTop);
+        setEntity(entity).setYOffset(yOffset);
+    }
+
     /**
      * @return self for chaining
      * @since 1.9.0
@@ -54,7 +60,7 @@ public class EntityTraceLine extends TraceLine {
     }
 
     @Override
-    public void render(PoseStack matrixStack, MultiBufferSource consumers, float tickDelta) {
+    public void render(PoseStack matrixStack, SubmitNodeCollector collector, float tickDelta) {
         if (shouldRemove || entity == null || entity.isRemoved() || entity.level() != mc.level) {
             shouldRemove = true;
             dirty = true;
@@ -63,7 +69,7 @@ public class EntityTraceLine extends TraceLine {
 
         Vec3 vec = entity.getPosition(tickDelta);
         setPos(vec.x, vec.y + yOffset, vec.z);
-        super.render(matrixStack, consumers, tickDelta);
+        super.render(matrixStack, collector, tickDelta);
     }
 
     public static class Builder {
@@ -74,6 +80,7 @@ public class EntityTraceLine extends TraceLine {
         private double yOffset = 0.5;
         private int color = 0xFFFFFF;
         private int alpha = 0xFF;
+        private boolean alwaysOnTop = true;
 
         public Builder(Draw3D parent) {
             this.parent = parent;
@@ -122,7 +129,7 @@ public class EntityTraceLine extends TraceLine {
          * @since 1.9.0
          */
         public Builder color(int color) {
-            this.color = color;
+            this.color = ColorUtil.fixAlpha(color);
             return this;
         }
 
@@ -182,6 +189,11 @@ public class EntityTraceLine extends TraceLine {
             return this;
         }
 
+        public Builder alwaysOnTop(boolean alwaysOnTop) {
+            this.alwaysOnTop = alwaysOnTop;
+            return this;
+        }
+
         /**
          * @return the alpha value of the line's color
          * @since 1.9.0
@@ -231,7 +243,7 @@ public class EntityTraceLine extends TraceLine {
          * @since 1.9.0
          */
         public EntityTraceLine build() {
-            return new EntityTraceLine(entity, color, alpha, yOffset);
+            return new EntityTraceLine(entity, color, alpha, yOffset, alwaysOnTop);
         }
 
     }

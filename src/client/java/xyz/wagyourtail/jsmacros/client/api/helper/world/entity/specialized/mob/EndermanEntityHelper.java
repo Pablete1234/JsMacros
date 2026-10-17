@@ -1,6 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.api.helper.world.entity.specialized.mob;
 
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import org.jetbrains.annotations.Nullable;
 import xyz.wagyourtail.jsmacros.client.api.helper.world.BlockStateHelper;
 import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.MobEntityHelper;
@@ -10,9 +10,9 @@ import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.MobEntityHelper;
  * @since 1.8.4
  */
 @SuppressWarnings("unused")
-public class EndermanEntityHelper extends MobEntityHelper<EnderMan> {
+public class EndermanEntityHelper extends MobEntityHelper<Enderman> {
 
-    public EndermanEntityHelper(EnderMan base) {
+    public EndermanEntityHelper(Enderman base) {
         super(base);
     }
 

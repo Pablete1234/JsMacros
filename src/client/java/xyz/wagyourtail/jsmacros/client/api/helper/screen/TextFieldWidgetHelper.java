@@ -1,15 +1,14 @@
 package xyz.wagyourtail.jsmacros.client.api.helper.screen;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.EditBox;
 import org.jetbrains.annotations.Nullable;
 import xyz.wagyourtail.jsmacros.client.JsMacrosClient;
 import xyz.wagyourtail.jsmacros.client.api.classes.render.IScreen;
 import xyz.wagyourtail.jsmacros.client.mixin.access.MixinEditBox;
+import xyz.wagyourtail.jsmacros.client.util.MainThread;
 import xyz.wagyourtail.jsmacros.core.MethodWrapper;
 
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -39,7 +38,7 @@ public class TextFieldWidgetHelper extends ClickableWidgetHelper<TextFieldWidget
      * @return self for chaining.
      * @since 1.0.5
      */
-    public TextFieldWidgetHelper setText(String text) throws InterruptedException {
+    public TextFieldWidgetHelper setText(String text) {
         setText(text, true);
         return this;
     }
@@ -50,20 +49,10 @@ public class TextFieldWidgetHelper extends ClickableWidgetHelper<TextFieldWidget
      * @param text
      * @param await
      * @return self for chaining.
-     * @throws InterruptedException
      * @since 1.3.1
      */
-    public TextFieldWidgetHelper setText(String text, boolean await) throws InterruptedException {
-        if (JsMacrosClient.clientCore.profile.checkJoinedThreadStack()) {
-            base.setValue(text);
-        } else {
-            final Semaphore waiter = new Semaphore(await ? 0 : 1);
-            Minecraft.getInstance().execute(() -> {
-                base.setValue(text);
-                waiter.release();
-            });
-            waiter.acquire();
-        }
+    public TextFieldWidgetHelper setText(String text, boolean await) {
+        MainThread.run(() -> base.setValue(text), await);
         return this;
     }
 

@@ -6,6 +6,7 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import xyz.wagyourtail.jsmacros.client.JsMacrosClient;
+import xyz.wagyourtail.jsmacros.client.util.MainThread;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -14,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -36,18 +36,17 @@ public class CustomImage {
     private final Identifier identifier;
 
     public CustomImage(BufferedImage image) {
-        this(image, String.valueOf(currentId));
+        this(image, null);
     }
 
     public CustomImage(BufferedImage image, String name) {
         this.image = image;
         this.graphics = image.createGraphics();
-        this.name = name;
-        this.texture = createTexture(image, PREFIX + name);
-        identifier = Identifier.parse(PREFIX + name);
-        Minecraft.getInstance().getTextureManager().register(identifier, texture);
+        this.name = nextName(name);
+        this.texture = createTexture(image, PREFIX + this.name);
+        identifier = Identifier.parse(PREFIX + this.name);
+        MainThread.await(() -> Minecraft.getInstance().getTextureManager().register(identifier, texture));
         update();
-        currentId++;
         IMAGES.put(identifier.toString(), this);
     }
 
@@ -109,17 +108,7 @@ public class CustomImage {
      * @since 1.8.4
      */
     public CustomImage update() {
-        try {
-            final Semaphore semaphore = new Semaphore(0);
-            Minecraft.getInstance().execute(() -> {
-                texture.upload();
-                updateTexture();
-                semaphore.release();
-            });
-            semaphore.acquire();
-        } catch (InterruptedException e) {
-            JsMacrosClient.clientCore.profile.logError(e);
-        }
+        MainThread.await(this::updateTexture);
         return this;
     }
 
@@ -254,7 +243,7 @@ public class CustomImage {
      * @since 1.8.4
      */
     public CustomImage drawImage(Image img, int x, int y, int width, int height, int sourceX, int sourceY, int sourceWidth, int sourceHeight) {
-        graphics.drawImage(image, x, y, x + width, y + height, sourceX, sourceY, sourceX + sourceWidth, sourceY + sourceHeight, null);
+        graphics.drawImage(img, x, y, x + width, y + height, sourceX, sourceY, sourceX + sourceWidth, sourceY + sourceHeight, null);
         return this;
     }
 
@@ -608,17 +597,12 @@ public class CustomImage {
 
     private static DynamicTexture createTexture(BufferedImage image, String name) {
         AtomicReference<DynamicTexture> texture = new AtomicReference<>();
-        try {
-            final Semaphore semaphore = new Semaphore(0);
-            Minecraft.getInstance().execute(() -> {
-                texture.set(new DynamicTexture(name, image.getWidth(), image.getHeight(), true));
-                semaphore.release();
-            });
-            semaphore.acquire();
-        } catch (InterruptedException e) {
-            JsMacrosClient.clientCore.profile.logError(e);
-        }
+        MainThread.await(() -> texture.set(new DynamicTexture(name, image.getWidth(), image.getHeight(), true)));
         return texture.get();
+    }
+
+    private static synchronized String nextName(@Nullable String name) {
+        return name == null ? String.valueOf(currentId++) : name;
     }
 
     public static CustomImage createWidget(int width, int height, String name) {

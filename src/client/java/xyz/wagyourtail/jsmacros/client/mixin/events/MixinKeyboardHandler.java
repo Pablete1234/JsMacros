@@ -1,5 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.mixin.events;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.KeyEvent;
@@ -12,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import xyz.wagyourtail.jsmacros.client.api.event.impl.EventKey;
 
 @Mixin(KeyboardHandler.class)
-class MixinKeyboardHandler {
+public class MixinKeyboardHandler {
 
     @Shadow
     @Final
@@ -23,10 +24,10 @@ class MixinKeyboardHandler {
         if (window != minecraft.getWindow().handle()) {
             return;
         }
-        if (event.key() == -1 || action == 2) {
+        if (event.key() == InputConstants.REPEAT) {
             return;
         }
-        if (EventKey.parse(event.key(), event.scancode(), action, event.modifiers())) {
+        if (EventKey.parse(InputConstants.getKey(event), action, event.modifiers())) {
             info.cancel();
         }
     }

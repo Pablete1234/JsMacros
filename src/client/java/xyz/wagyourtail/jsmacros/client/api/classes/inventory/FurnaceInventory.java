@@ -1,13 +1,8 @@
 package xyz.wagyourtail.jsmacros.client.api.classes.inventory;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.client.gui.screens.inventory.AbstractFurnaceScreen;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.item.Item;
 import xyz.wagyourtail.jsmacros.client.api.helper.inventory.ItemStackHelper;
-import xyz.wagyourtail.jsmacros.client.mixin.access.MixinAbstractFurnaceMenu;
 
 import java.util.Map;
 
@@ -74,7 +69,7 @@ public class FurnaceInventory extends RecipeInventory<AbstractFurnaceScreen<?>> 
      * @since 1.8.4
      */
     public boolean canUseAsFuel(ItemStackHelper stack) {
-        return ((MixinAbstractFurnaceMenu) inventory.getMenu()).invokeIsFuel(stack.getRaw());
+        return inventory.getMenu().isFuel(stack.getRaw());
     }
 
     /**
@@ -83,19 +78,18 @@ public class FurnaceInventory extends RecipeInventory<AbstractFurnaceScreen<?>> 
      * @since 1.8.4
      */
     public boolean isSmeltable(ItemStackHelper stack) {
-        return ((MixinAbstractFurnaceMenu) inventory.getMenu()).invokeCanSmelt(stack.getRaw());
+        return inventory.getMenu().canSmelt(stack.getRaw());
     }
 
     /**
-     * @return a map of all valid fuels and their burn times in ticks.
+     * @return an empty map. Client no longer has this data.
      * @since 1.8.4
+     * @deprecated Fuels are no longer synced with the client
      */
+    @Deprecated
     public Map<String, Integer> getFuelValues() {
-        Object2IntMap<String> fuelMap = new Object2IntOpenHashMap<>();
-        for (Map.Entry<Item, Integer> entry : mc.level.fuelValues().values.entrySet()) {
-            fuelMap.put(BuiltInRegistries.ITEM.getKey(entry.getKey()).toString(), entry.getValue().intValue());
-        }
-        return fuelMap;
+        // No-op, return empty map
+        return new Object2IntOpenHashMap<>();
     }
 
     /**
@@ -105,7 +99,7 @@ public class FurnaceInventory extends RecipeInventory<AbstractFurnaceScreen<?>> 
      * @since 1.8.4
      */
     public int getSmeltingProgress() {
-        return getPropertyDelegate().get(2);
+        return inventory.getMenu().data.get(2);
     }
 
     /**
@@ -113,7 +107,7 @@ public class FurnaceInventory extends RecipeInventory<AbstractFurnaceScreen<?>> 
      * @since 1.8.4
      */
     public int getTotalSmeltingTime() {
-        return getPropertyDelegate().get(3);
+        return inventory.getMenu().data.get(3);
     }
 
     /**
@@ -129,7 +123,7 @@ public class FurnaceInventory extends RecipeInventory<AbstractFurnaceScreen<?>> 
      * @since 1.8.4
      */
     public int getRemainingFuelTime() {
-        return getPropertyDelegate().get(0);
+        return inventory.getMenu().data.get(0);
     }
 
     /**
@@ -137,11 +131,7 @@ public class FurnaceInventory extends RecipeInventory<AbstractFurnaceScreen<?>> 
      * @since 1.8.4
      */
     public int getTotalFuelTime() {
-        return getPropertyDelegate().get(1);
-    }
-
-    private ContainerData getPropertyDelegate() {
-        return ((MixinAbstractFurnaceMenu) inventory.getMenu()).getData();
+        return inventory.getMenu().data.get(1);
     }
 
     /**

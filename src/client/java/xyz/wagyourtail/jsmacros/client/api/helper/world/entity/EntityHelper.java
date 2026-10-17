@@ -51,15 +51,15 @@ import net.minecraft.world.entity.decoration.painting.Painting;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.monster.Creeper;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.entity.monster.Guardian;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.monster.Shulker;
-import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.monster.Strider;
 import net.minecraft.world.entity.monster.Vex;
 import net.minecraft.world.entity.monster.Witch;
+import net.minecraft.world.entity.monster.cubemob.Slime;
 import net.minecraft.world.entity.monster.illager.AbstractIllager;
 import net.minecraft.world.entity.monster.illager.Pillager;
 import net.minecraft.world.entity.monster.illager.SpellcasterIllager;
@@ -197,6 +197,17 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      */
     public Pos3D getPos() {
         return new Pos3D(base.getX(), base.getY(), base.getZ());
+    }
+
+    /**
+     * Returns the interpolated position of the entity for the given render tick.
+     *
+     * @param partialTicks the fractional tick value used for interpolation between
+     *                     the previous and current tick (0–1)
+     * @return a new {@link Pos3D} representing the interpolated entity position
+     */
+    public Pos3D getPos(float partialTicks) {
+        return new Pos3D(base.getPosition(partialTicks));
     }
 
     /**
@@ -642,8 +653,8 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
                 } else {
                     return new ZombieEntityHelper<>(((Zombie) e));
                 }
-            } else if (e instanceof EnderMan) {
-                return new EndermanEntityHelper(((EnderMan) e));
+            } else if (e instanceof Enderman) {
+                return new EndermanEntityHelper(((Enderman) e));
             } else if (e instanceof Ghast) {
                 return new GhastEntityHelper(((Ghast) e));
             } else if (e instanceof Blaze) {

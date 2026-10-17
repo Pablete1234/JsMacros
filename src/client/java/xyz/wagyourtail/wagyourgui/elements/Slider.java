@@ -1,5 +1,6 @@
 package xyz.wagyourtail.wagyourgui.elements;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -10,7 +11,6 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
@@ -42,9 +42,9 @@ public class Slider extends AbstractWidget {
     @Override
     public boolean keyPressed(KeyEvent event) {
         var keyCode = event.key();
-        if (keyCode == GLFW.GLFW_KEY_LEFT) {
+        if (keyCode == InputConstants.KEY_LEFT) {
             setValue(value + (double) (1 / steps));
-        } else if (keyCode == GLFW.GLFW_KEY_RIGHT) {
+        } else if (keyCode == InputConstants.KEY_RIGHT) {
             setValue(value - (double) (1 / steps));
         }
         return false;

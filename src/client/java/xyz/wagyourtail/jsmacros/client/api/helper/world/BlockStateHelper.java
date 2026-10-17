@@ -2,6 +2,7 @@ package xyz.wagyourtail.jsmacros.client.api.helper.world;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import xyz.wagyourtail.doclet.DocletReplaceParams;
 import xyz.wagyourtail.doclet.DocletReplaceReturn;
@@ -129,20 +130,13 @@ public class BlockStateHelper extends StateHelper<BlockState> {
      */
     @DocletReplaceReturn("PistonBehaviour")
     public String getPistonBehaviour() {
-        switch (base.getPistonPushReaction()) {
-            case NORMAL:
-                return "NORMAL";
-            case BLOCK:
-                return "BLOCK";
-            case PUSH_ONLY:
-                return "PUSH_ONLY";
-            case DESTROY:
-                return "DESTROY";
-            case IGNORE:
-                return "IGNORE";
-            default:
-                throw new IllegalArgumentException();
-        }
+        return switch (base.getPistonPushReaction()) {
+            case PUSH_PULL -> "NORMAL";
+            case IMMOVEABLE -> "BLOCK";
+            case PUSH -> "PUSH_ONLY";
+            case POPPED -> "DESTROY";
+            case IGNORE_ENTITY -> "IGNORE";
+        };
     }
 
     /**
@@ -150,7 +144,9 @@ public class BlockStateHelper extends StateHelper<BlockState> {
      * @since 1.6.5
      */
     public boolean blocksMovement() {
-        return base.blocksMotion();
+        // 26.3 removed blocksMotion; this was the implementation in 26.2:
+        var block = base.getBlock();
+        return block != Blocks.COBWEB && block != Blocks.BAMBOO_SAPLING && base.isSolid();
     }
 
     /**

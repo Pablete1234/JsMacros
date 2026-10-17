@@ -1,5 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.mixin.events;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.input.MouseButtonInfo;
@@ -13,7 +14,7 @@ import xyz.wagyourtail.jsmacros.client.api.event.impl.EventKey;
 import xyz.wagyourtail.jsmacros.client.api.event.impl.EventMouseScroll;
 
 @Mixin(MouseHandler.class)
-class MixinMouseHandler {
+public class MixinMouseHandler {
 
     @Shadow
     @Final
@@ -27,7 +28,7 @@ class MixinMouseHandler {
         if (event.button() == -1 || action == 2) {
             return;
         }
-        if (EventKey.parse(event.button(), -1, action, event.modifiers())) {
+        if (EventKey.parse(InputConstants.Type.MOUSE.getOrCreate(event.button()), action, event.modifiers())) {
             info.cancel();
         }
     }
@@ -35,7 +36,7 @@ class MixinMouseHandler {
     @Inject(at = @At("HEAD"), method = "onScroll", cancellable = true)
     private void onMouseScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
         if (window != minecraft.getWindow().handle()) return;
-        if (minecraft.getOverlay() != null || minecraft.screen != null || minecraft.player == null) return;
+        if (minecraft.gui.overlay() != null || minecraft.gui.screen() != null || minecraft.player == null) return;
         if (vertical == 0.0 && horizontal == 0.0) return;
         EventMouseScroll event = new EventMouseScroll(horizontal, vertical);
         event.trigger();

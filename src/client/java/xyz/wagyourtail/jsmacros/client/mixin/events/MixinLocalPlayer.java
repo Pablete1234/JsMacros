@@ -13,6 +13,7 @@ import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
+import net.minecraft.world.level.block.entity.SignTextSlot;
 import net.minecraft.world.phys.Vec2;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.wagyourtail.jsmacros.api.PlayerInput;
-import xyz.wagyourtail.jsmacros.client.api.event.impl.inventory.EventDropSlot;
 import xyz.wagyourtail.jsmacros.client.api.event.impl.player.EventAirChange;
 import xyz.wagyourtail.jsmacros.client.api.event.impl.player.EventEXPChange;
 import xyz.wagyourtail.jsmacros.client.api.event.impl.player.EventRiding;
@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Mixin(LocalPlayer.class)
-abstract class MixinLocalPlayer extends AbstractClientPlayer {
+public abstract class MixinLocalPlayer extends AbstractClientPlayer {
 
     @Shadow
     public ClientInput input;
@@ -68,9 +68,11 @@ abstract class MixinLocalPlayer extends AbstractClientPlayer {
     }
 
     @Inject(at = @At("HEAD"), method = "openTextEdit", cancellable = true)
-    public void onOpenEditSignScreen(SignBlockEntity sign, boolean front, CallbackInfo ci) {
-        var originalLines = Arrays.stream(sign.getText(front)
-                .getMessages(minecraft.isTextFilteringEnabled()))
+    public void onOpenEditSignScreen(SignBlockEntity sign, SignTextSlot slot, CallbackInfo ci) {
+        boolean front = slot == SignTextSlot.FRONT;
+        var originalLines = sign.getText(slot)
+                .getMessages(minecraft.isTextFilteringEnabled())
+                .stream()
                 .map(Component::getString)
                 .toList();
 
@@ -89,17 +91,17 @@ abstract class MixinLocalPlayer extends AbstractClientPlayer {
 
         // Replace text only if needed
         if (!Objects.equals(originalLines, lines)) {
-            SignText text = new SignText();
+            SignText.Mutable text = sign.getText(slot).asMutable();
             for (int i = 0; i < 4; ++i) {
-                text = text.setMessage(i, Component.nullToEmpty(lines.get(i)));
+                text = text.setLine(i, Component.nullToEmpty(lines.get(i)));
             }
-            sign.setText(text, front);
+            sign.setText(text.asImmutable(), slot);
             sign.setChanged();
         }
 
         // Cancel only if needed
         if (event.closeScreen || event.isCanceled()) {
-            connection.send(new ServerboundSignUpdatePacket(sign.getBlockPos(), front, lines.get(0), lines.get(1), lines.get(2), lines.get(3)));
+            connection.send(new ServerboundSignUpdatePacket(sign.getBlockPos(), lines, slot));
             ci.cancel();
         }
     }
@@ -135,16 +137,6 @@ abstract class MixinLocalPlayer extends AbstractClientPlayer {
     public void onStopRiding(CallbackInfo ci) {
         if (this.getVehicle() != null) {
             new EventRiding(false, this.getVehicle()).trigger();
-        }
-    }
-
-    @Inject(method = "drop", at = @At("HEAD"), cancellable = true)
-    public void onDropSelected(boolean entireStack, CallbackInfoReturnable<Boolean> cir) {
-        int selectedHotbarIndex = getInventory().getSelectedSlot();
-        EventDropSlot event = new EventDropSlot(null, 36 + selectedHotbarIndex, entireStack);
-        event.trigger();
-        if (event.isCanceled()) {
-            cir.setReturnValue(false);
         }
     }
 

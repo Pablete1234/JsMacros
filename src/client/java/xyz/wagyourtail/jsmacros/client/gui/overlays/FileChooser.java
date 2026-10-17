@@ -1,11 +1,11 @@
 package xyz.wagyourtail.jsmacros.client.gui.overlays;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.Blaze3D;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Util;
 import xyz.wagyourtail.jsmacros.client.JsMacrosClient;
 import xyz.wagyourtail.wagyourgui.elements.Button;
 import xyz.wagyourtail.wagyourgui.elements.Scrollbar;
@@ -151,7 +151,7 @@ public class FileChooser extends OverlayContainer {
         }))));
 
         this.addDrawableChild(new Button(x + 2, y + height - 14, w / 6, 12, textRenderer, 0, 0, 0x7FFFFFFF, 0xFFFFFFFF, Component.translatable("jsmacros.openfolder"), (btn) -> {
-            Util.getPlatform().openFile(directory);
+            Blaze3D.openPath(directory.toPath());
         }));
 
         this.setDir(directory);

@@ -1,7 +1,5 @@
 package xyz.wagyourtail.jsmacros.client.gui.containers;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -29,7 +27,6 @@ public class MacroContainer extends MultiElementContainer<MacroScreen> {
     private static final Identifier event_tex = Identifier.fromNamespaceAndPath(JsMacros.MOD_ID, "resources/event.png");
     private static final Identifier script_fork_tex = Identifier.fromNamespaceAndPath(JsMacros.MOD_ID, "resources/script_fork.png");
     private static final Identifier script_join_tex = Identifier.fromNamespaceAndPath(JsMacros.MOD_ID, "resources/script_join.png");
-    private final Minecraft mc;
     private final ScriptTrigger macro;
     private Button enableBtn;
     private Button keyBtn;
@@ -43,7 +40,6 @@ public class MacroContainer extends MultiElementContainer<MacroScreen> {
     public MacroContainer(int x, int y, int width, int height, Font textRenderer, ScriptTrigger macro, MacroScreen parent) {
         super(x, y, width, height, textRenderer, parent);
         this.macro = macro;
-        this.mc = Minecraft.getInstance();
         init();
     }
 
@@ -212,9 +208,7 @@ public class MacroContainer extends MultiElementContainer<MacroScreen> {
                 } else {
                     tex = script_fork_tex;
                 }
-                GlStateManager._enableBlend();
                 drawContext.blit(RenderPipelines.GUI_TEXTURED, tex, x + w / 4 - 2 * height + 2, y + 2, 0, 0, height - 4, height - 4, 32, 32, 32, 32);
-                GlStateManager._disableBlend();
                 switch (macro.triggerType) {
                     default:
                     case KEY_FALLING:
@@ -227,18 +221,14 @@ public class MacroContainer extends MultiElementContainer<MacroScreen> {
                         tex = key_both_tex;
                         break;
                 }
-                GlStateManager._enableBlend();
                 drawContext.blit(RenderPipelines.GUI_TEXTURED, tex, x + w / 4 - height + 2, y + 2, 0, 0, height - 4, height - 4, 32, 32, 32, 32);
-                GlStateManager._disableBlend();
             } else {
                 if (macro.joined) {
                     tex = script_join_tex;
                 } else {
                     tex = script_fork_tex;
                 }
-                GlStateManager._enableBlend();
                 drawContext.blit(RenderPipelines.GUI_TEXTURED, tex, x + w / 4 - height + 2, y + 2, 0, 0, height - 4, height - 4, 32, 32, 32, 32);
-                GlStateManager._disableBlend();
             }
 
             // border

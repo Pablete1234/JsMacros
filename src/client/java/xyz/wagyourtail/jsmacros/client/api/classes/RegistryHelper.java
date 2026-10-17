@@ -6,8 +6,11 @@ import com.mojang.serialization.DynamicOps;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.arguments.blocks.BlockStateParser;
 import net.minecraft.commands.arguments.item.ItemParser;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderOwner;
+import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -16,6 +19,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
@@ -48,19 +52,27 @@ public class RegistryHelper {
     /**
      * implemented in mixins to make this equal to any owner. used by NBT_PASS_OPS
      */
-    public static final HolderOwner<?> ALL_EQUALITY_OWNER = new HolderOwner<>() {
+    public static final HolderGetter<?> ALL_EQUALITY_OWNER = new HolderGetter<>() {
         @Override
-        public boolean canSerializeIn(HolderOwner<Object> other) {
+        public boolean canSerialize(HolderOwner<Object> other) {
             return true;
+        }
+
+        @Override
+        public Optional<Holder.Reference<Object>> get(ResourceKey<Object> key) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<HolderSet.Named<Object>> get(TagKey<Object> tag) {
+            return Optional.empty();
         }
     };
     private static final RegistryOps.RegistryInfoLookup REGISTRY_INFO_GETTER_UNLIMITED = new RegistryOps.RegistryInfoLookup() {
-        private final RegistryOps.RegistryInfo<?> INFO = new RegistryOps.RegistryInfo<>(ALL_EQUALITY_OWNER, null, null);
-
         @Override
-        public <T> Optional<RegistryOps.RegistryInfo<T>> lookup(ResourceKey<? extends Registry<? extends T>> registryRef) {
+        public <T> Optional<HolderGetter<T>> lookup(ResourceKey<? extends Registry<? extends T>> registryRef) {
             //noinspection unchecked
-            return Optional.of((RegistryOps.RegistryInfo<T>) INFO);
+            return Optional.of((HolderGetter<T>) ALL_EQUALITY_OWNER);
         }
 
     };
@@ -294,7 +306,7 @@ public class RegistryHelper {
      */
     @DocletReplaceReturn("JavaList<FeatureId>")
     public List<String> getFeatureIds() {
-        return BuiltInRegistries.FEATURE.keySet().stream().map(Identifier::toString).collect(Collectors.toList());
+        return BuiltInRegistries.FEATURE_TYPE.keySet().stream().map(Identifier::toString).collect(Collectors.toList());
     }
 
     /**
