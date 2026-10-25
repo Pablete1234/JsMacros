@@ -59,13 +59,19 @@ public class GraalLanguageDefinition extends BaseLanguage<Context, GraalScriptCo
         // Set Bindings
         final Value binds = con.getBindings(lang);
 
-        if (globals != null) {
-            globals.forEach(binds::putMember);
+        try {
+            if (globals != null) {
+                globals.forEach(binds::putMember);
+            }
+
+            libs.forEach(binds::putMember);
+
+            return con;
+        } catch (RuntimeException | Error failure) {
+            // If setup fails, the caller never receives this context and cannot clean it up.
+            con.close();
+            throw failure;
         }
-
-        libs.forEach(binds::putMember);
-
-        return con;
     }
 
     @Override
