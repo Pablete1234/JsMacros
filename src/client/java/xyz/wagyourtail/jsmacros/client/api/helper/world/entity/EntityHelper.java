@@ -7,6 +7,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.entity.AreaEffectCloud;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -48,7 +49,9 @@ import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.decoration.painting.Painting;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Enderman;
@@ -135,7 +138,10 @@ import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.specialized.mob.W
 import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.specialized.mob.WitchEntityHelper;
 import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.specialized.mob.ZombieEntityHelper;
 import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.specialized.mob.ZombieVillagerEntityHelper;
+import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.specialized.other.AreaEffectCloudEntityHelper;
+import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.specialized.other.FallingBlockEntityHelper;
 import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.specialized.other.InteractionEntityHelper;
+import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.specialized.other.TntEntityHelper;
 import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.specialized.passive.AbstractHorseEntityHelper;
 import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.specialized.passive.AllayEntityHelper;
 import xyz.wagyourtail.jsmacros.client.api.helper.world.entity.specialized.passive.AnimalEntityHelper;
@@ -795,6 +801,15 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
             return new FurnaceMinecartEntityHelper(((MinecartFurnace) e));
         } else if (e instanceof MinecartTNT) {
             return new TntMinecartEntityHelper(((MinecartTNT) e));
+        }
+
+        // Other entities
+        if (e instanceof AreaEffectCloud) {
+            return new AreaEffectCloudEntityHelper(((AreaEffectCloud) e));
+        } else if (e instanceof FallingBlockEntity) {
+            return new FallingBlockEntityHelper(((FallingBlockEntity) e));
+        } else if (e instanceof PrimedTnt) {
+            return new TntEntityHelper(((PrimedTnt) e));
         }
 
         if (e instanceof LivingEntity) {
