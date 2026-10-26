@@ -105,6 +105,7 @@ import xyz.wagyourtail.jsmacros.core.language.BaseScriptContext;
 import xyz.wagyourtail.jsmacros.core.language.BaseWrappedException;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class ClientProfile extends BaseProfile {
     private static final Minecraft mc = Minecraft.getInstance();
@@ -142,7 +143,7 @@ public class ClientProfile extends BaseProfile {
                     return;
                 }
                 // un-wrap exceptions
-                if (ex.getMessage().equals(ex.getCause().toString())) {
+                if (Objects.equals(ex.getMessage(), ex.getCause().toString())) {
                     ex = ex.getCause();
                 }
             }
